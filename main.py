@@ -1,13 +1,15 @@
 import cocos
 import pyglet
 
-from shop import Shop
+from menu import MenuScene
 
 pyglet.resource.path = ['img']
 pyglet.resource.reindex()
 
-cocos.director.director.init(width=1024, height=768)
+cocos.director.director.init(width=1024, height=768,
+    caption="Racer game with uber cool title")
 
-shop_scene = Shop()
+menu_scene = MenuScene()
 
-cocos.director.director.run(shop_scene)
+cocos.director.director.run(menu_scene)
+
