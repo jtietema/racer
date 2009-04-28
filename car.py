@@ -90,9 +90,12 @@ class Car(Sprite):
         
         self.speed = self.calculate_speed(dt, terrain)
         
-        if self.speed <> 0:
+        if self.speed > 0:
             rot_factor = min(1, abs(self.speed) / 200)
             self.rotation = (self.rotation + (rot_factor * ROTATION_SPEED * self.rot_dir * dt)) % 360
+        elif self.speed < 0:
+            rot_factor = min(1, abs(self.speed) / 200)
+            self.rotation = (self.rotation + (rot_factor * ROTATION_SPEED * -self.rot_dir * dt)) % 360
         
         r = math.radians(self.rotation)
         s = dt * self.speed
