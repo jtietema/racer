@@ -26,6 +26,9 @@ class SpriteText(rabbyt.BaseSprite):
 
     def setText(self, text):
         self._text.text = text
+    
+    def getText(self):
+        return self._text.text
 
     def render_after_transform(self):
         self._text.color = self.rgba

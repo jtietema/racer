@@ -7,7 +7,9 @@ options = {
     'engines' : [
         {
             "name": "Basic Engine",
-            "power": 3
+            "power": 3,
+            "price": 0,
+            "image": ""
         },
         {
             "name": "Monster truck Engine",
