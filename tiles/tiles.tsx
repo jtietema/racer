@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset name="grass-hill" firstgid="1" tilewidth="20" tileheight="20" spacing="20">
- <image source="tiles/grass-hill.bmp"/>
+ <image source="grass-hill.bmp"/>
  <tile id="0">
   <properties>
    <property name="blocked" value="1"/>

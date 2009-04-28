@@ -19,6 +19,7 @@ class RabbytLayer(cocos.layer.Layer):
         for sprite in self.rabbyt_sprites:
             sprite.render()
 
+
 class SpriteText(rabbyt.BaseSprite):
     def __init__(self, ft, text="", *args, **kwargs):
         rabbyt.BaseSprite.__init__(self, *args, **kwargs)
@@ -26,7 +27,17 @@ class SpriteText(rabbyt.BaseSprite):
 
     def setText(self, text):
         self._text.text = text
+    
+    def getText(self):
+        return self._text.text
 
     def render_after_transform(self):
         self._text.color = self.rgba
         self._text.draw()
+
+
+def signum(number):
+    """This should be in Python's standard library."""
+    if number > 0: return 1
+    elif number < 0: return -1
+    return number

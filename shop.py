@@ -50,6 +50,7 @@ class OptionsWidget(util.RabbytLayer):
         self.add(arrow_left)
         self.add(arrow_right)
         self.controls = [arrow_left, arrow_right]
+        self.controls_items = []
         cocos.director.director.window.push_handlers(self.on_mouse_press)
         
         self.options = self.options_to_sprites(parts.options['tyres'])
@@ -79,6 +80,13 @@ class OptionsWidget(util.RabbytLayer):
             self.option_name = util.SpriteText(self.font, 
                 parts.index[self.index], xy=(750, 700), rgb=(0,0,0))
             self.add_options()
+        
+        # check if one of the items was pressed
+        collisions = rabbyt.collisions.collide_single((x,y, 15), self.controls_items)
+        if len(collisions) != 0:
+            # check which option was pressed
+            option_name = collisions[0].getText()
+            print option_name
     
     def options_to_sprites(self, options):
         '''Converts options to SpriteText objects
@@ -92,10 +100,13 @@ class OptionsWidget(util.RabbytLayer):
         return sprites
     
     def add_options(self):
-        '''Add all options to the layer'''
+        '''Add all options to the layer and to the items list
+        '''
+        self.controls_items = []
         self.add(self.option_name)
         for option in self.options:
             self.add(option)
+            self.controls_items.append(option)
     
     def remove_options(self):
         '''Remove all options to the layer'''

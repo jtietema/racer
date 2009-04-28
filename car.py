@@ -1,7 +1,12 @@
+import math
+import os
+
 from cocos.sprite import Sprite
 from cocos.director import director
 from pyglet.window import key
-import math
+
+import parts
+from util import signum
 
 # Convenience constants.
 FORWARD = RIGHT = 1
@@ -37,36 +42,36 @@ MASS = 5
 POWER = 5
 
 
-def signum(number):
-    """This should be in Python's standard library."""
-    if number > 0: return 1
-    elif number < 0: return -1
-    return number
-
-
 class Car(Sprite):
-    def __init__(self, id, pos):
-        Sprite.__init__(self, 'car.png', pos)
+    @classmethod
+    def get_default(cls):
+        """Returns an instance of Car with default configuration."""
+        return cls(chassis='fellali', engine='basic', tyres='second_hand')
+    
+    def __init__(self, **parts):
+        Sprite.__init__(self, 'car.png')
         
         self.scale = 0.3
         
-        # Unique identifier that this car should use for network
-        # communication.
-        self.id = id
+        # Set the car's parts.
+        for group, name in parts.items():
+            setattr(self, group, name)
         
-        # Car has no initial speed.
+        self.reset()
+        
+        self.set_part_dependant_properties()
+    
+    def reset(self):
+        """Resets some properties of the car, such as rotation and speed.
+           This is useful when switching races."""
         self.speed = 0
+        self.rotation = 0
         
         # The direction in which we are accelerating.
         self.accel_dir = 0
         
         # The direction in which we are rotating.
         self.rot_dir = 0
-        
-        self.set_part_dependant_properties()
-        
-        # Make sure we update the car every frame.
-        self.schedule(self.update)
     
     def set_part_dependant_properties(self):
         """Sets properties that depend on the car's parts. These mainly
@@ -80,6 +85,7 @@ class Car(Sprite):
         self.brake_multiplier = self.friction_multiplier * (10 - MASS)
         
     def update(self, dt):
+        """Update the car's state. """
         terrain = 'asphalt'
         
         self.speed = self.calculate_speed(dt, terrain)
@@ -99,6 +105,10 @@ class Car(Sprite):
             self.y = target_y
     
     def calculate_speed(self, dt, terrain):
+        """Calculates the car's new speed based on its current speed, the
+           amount of time passed and physical properties like the friction
+           and the car's mass."""
+        
         # Work with a copy of the speed, since we don't want to alter the
         # state directly.
         speed = self.speed
@@ -150,11 +160,11 @@ class Car(Sprite):
 
 
 class PlayerCar(Car):
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         self.keyboard = key.KeyStateHandler()
         director.window.push_handlers(self.keyboard)
         
-        Car.__init__(self, *args)
+        Car.__init__(self, *args, **kwargs)
         
     def update(self, dt):
         self.rot_dir = self.keyboard[key.RIGHT] - self.keyboard[key.LEFT]

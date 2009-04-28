@@ -1,9 +1,13 @@
 import sys
 
 import cocos
+from cocos.director import director
 from cocos.menu import *
 
 from shop import Shop
+from race import Race
+import cups
+from game_state import state
 
 class MenuScene(cocos.scene.Scene):
     def __init__(self):
@@ -11,20 +15,27 @@ class MenuScene(cocos.scene.Scene):
         
         self.add(MainMenu())
 
-class MainMenu(cocos.menu.Menu):
+class MainMenu(Menu):
     def __init__(self):
         super(MainMenu, self).__init__('Main Menu')
         
         items = [
-            MenuItem('New game', self.new_game),
-            MenuItem('Shop', self.shop),
+            MenuItem('New game', self.on_new_game),
+            MenuItem('Shop', self.on_shop),
             MenuItem('Options', None),
-            MenuItem('Quit', sys.exit)
+            MenuItem('Quit', self.on_quit)
         ]
-        self.create_menu(items, zoom_in(), zoom_out())
+        
+        self.create_menu(items, shake(), shake_back())
     
-    def new_game(self):
-        pass
+    def on_new_game(self):
+        state.cup = cups.load(cups.list()[0])
+        race = Race(state.cup.next_map(), [state.profile.car])
+        director.replace(race)
     
-    def shop(self):
-        cocos.director.director.replace(Shop())
+    def on_shop(self):
+        director.replace(Shop())
+    
+    def on_quit(self):
+        """Called when the user presses escape."""
+        sys.exit()
