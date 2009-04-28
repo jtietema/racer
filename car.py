@@ -85,7 +85,7 @@ class Car(Sprite):
         self.brake_multiplier = self.friction_multiplier * (10 - MASS)
         
     def update(self, dt):
-        """Update the car's state. """
+        """Update the car's state."""
         terrain = 'asphalt'
         
         self.speed = self.calculate_speed(dt, terrain)
