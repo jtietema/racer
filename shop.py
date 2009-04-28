@@ -84,7 +84,7 @@ class OptionsWidget(cocos.layer.Layer):
         '''
         sprites = []
         y = 675
-        for option in options:
+        for option in options.values():
             sprites.append(util.Label(option['name'], 
                 position=(750, y), color=(0,0,0,255), font_name=self.font, 
                 font_size=16))
