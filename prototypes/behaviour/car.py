@@ -129,8 +129,11 @@ class Car(Sprite):
                 # Let the friction slow down the car.
                 slow_down_multiplier = self.friction_multiplier
             else:
-                # We want to apply brake power.
-                slow_down_multiplier = self.brake_multiplier * abs(self.accel_dir)
+                # We want to apply brake power, but correct it with the amount
+                # of brake power applied by the player. Make sure it doesn't
+                # get below the friction multiplier; there is no brake that
+                # negatively influences physical friction.
+                slow_down_multiplier = max(self.friction_multiplier, self.brake_multiplier * abs(self.accel_dir))
             
             # We use a large constant in the calculation to increase the effect
             # of slowing down.
