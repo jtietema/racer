@@ -4,27 +4,34 @@ index = [
 ]
 mod = 2
 options = {
-    'engines' : [
-        {
-            "name": "Basic Engine",
-            "power": 3,
-            "price": 0,
-            "image": ""
-        },
-        {
-            "name": "Monster truck Engine",
-            "power": 8
+    'chassis': {
+        'fellali': {
+            'name': 'Fellali',
+            'image': 'chassis.png',
+            'mass': 3,
+            'price': 0
         }
-    ],
+    },
 
-    'tyres' : [
-        {
-            "name": "Bicycle tyres",
-            "friction": 0.2
+    'engines': {
+        'basic': {
+            'name': 'Basic Engine',
+            'power': 3,
+            'price': 0
         },
-        {
-            "name": "Good year Pro",
-            "friction": 0.7
+        'monster_truck': {
+            'name': 'Monster Truck Engine',
+            'power': 8,
+            'price': 1000
         }
-    ]
+    },
+
+    'tyres': {
+        'second_hand': {
+            'name': 'Second Hand',
+            'image': 'tyre.png',
+            'friction': 0.3,
+            'price': 0
+        }
+    }
 }
