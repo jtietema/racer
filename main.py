@@ -2,7 +2,7 @@ from cocos.director import director
 import pyglet
 
 from menu import MenuScene
-from cup import Cup
+from cups import Cup
 import profiles
 from game_state import state
 
