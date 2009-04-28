@@ -31,7 +31,7 @@ class OptionsWidget(cocos.layer.Layer):
     def __init__(self):
         super(OptionsWidget, self).__init__()
         
-        self.font = 'Sans'
+        self.font = ['Sans']
         arrow_left = util.Label("<", position=(725, 700), color=(0,0,0,255), font_name=self.font
             , font_size=16)
         arrow_right = util.Label(">", position=(925, 700), color=(0,0,0,255), font_name=self.font, 
@@ -48,6 +48,9 @@ class OptionsWidget(cocos.layer.Layer):
             position=(750, 700), color=(0,0,0,255), font_name=self.font, 
             font_size=16)
         self.add_options()
+        
+        self._car_properties = {}
+        self.set_car_properties(7,5,6)
         
     def on_mouse_press(self, x, y, button, modifiers):
         '''Mouse key pressed event
@@ -85,9 +88,8 @@ class OptionsWidget(cocos.layer.Layer):
         sprites = []
         y = 675
         for option in options:
-            sprites.append(util.Label(option['name'], 
-                position=(750, y), color=(0,0,0,255), font_name=self.font, 
-                font_size=16))
+            sprites.append(util.Label(option['name'], position=(750, y), 
+                color=(0,0,0,255), font_name=self.font, font_size=16))
             y -= 25
         return sprites
     
@@ -105,6 +107,23 @@ class OptionsWidget(cocos.layer.Layer):
         self.remove(self.option_name)
         for option in self.options:
             self.remove(option)
-
-
+    
+    def set_car_properties(self, power, friction, mass):
+        '''Set the car stats/properties on the shop display
+        '''
+        # remove previous properties
+        for key, prop in self._car_properties:
+            self.remove(prop)
+        
+        # set new properties
+        self._car_properties = {
+            'power': util.Label('Power: ' + str(power), position=(100, 200),
+                color=(0,0,0,255), font_name=self.font, font_size=16), 
+            'friction': util.Label('Friction: ' + str(friction), position=(100, 175),
+                color=(0,0,0,255), font_name=self.font, font_size=16),
+            'mass': util.Label('Mass: ' + str(mass), position=(100, 150),
+                color=(0,0,0,255), font_name=self.font, font_size=16)
+        }
+        for key, prop in self._car_properties.items():
+            self.add(prop)
 
