@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map SYSTEM "http://mapeditor.org/dtd/1.0/map.dtd">
+<map version="1.0" orientation="orthogonal" width="80" height="80" tilewidth="20" tileheight="20">
+ <tileset firstgid="1" source="tiles.tsx"/>
+ <!-- Layer data is compressed (GZip) binary data, encoded in Base64 -->
+ <layer name="Layer 0" width="80" height="80">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAAO3DMQ0AAAwEoVvev+V66AwJq6aqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq+HqoCbEQAZAAA
+  </data>
+ </layer>
+</map>
