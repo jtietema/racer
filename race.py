@@ -1,10 +1,13 @@
 from cocos.scene import Scene
 from cocos.tiles import ScrollableLayer, ScrollingManager
+from cocos import menu
+from cocos.director import director
+from pyglet.window import key
 
 from game_state import state
 from car import PlayerCar
 
-class Race(Scene):
+class Race(Scene):    
     def __init__(self, map_layer, cars):
         Scene.__init__(self)
         
@@ -40,6 +43,8 @@ class Race(Scene):
         
         self.schedule(self.update)
         
+        self.menu = None
+        
     def update(self, dt):
         """Updates all the cars."""
         for car in self.cars:
@@ -47,4 +52,21 @@ class Race(Scene):
             
             if isinstance(car, PlayerCar):
                 self.scroller.set_focus(*car.position)
+
+
+class InGameMenu(menu.Menu):
+    def __init__(self):
+        menu.Menu.__init__('Game menu')
         
+        items = [
+            MenuItem('Resume game', self.on_resume),
+            MenuItem('Leave race', director.pop)
+        ]
+        
+        self.create_menu(items, shake(), shake_back())
+    
+    def on_resume(self):
+        self.parent.remove(self)
+    
+    def on_quit(self):
+        self.on_resume()

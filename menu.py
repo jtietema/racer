@@ -23,7 +23,7 @@ class MainMenu(Menu):
             MenuItem('New game', self.on_new_game),
             MenuItem('Shop', self.on_shop),
             MenuItem('Options', None),
-            MenuItem('Quit', self.on_quit)
+            MenuItem('Quit', sys.exit)
         ]
         
         self.create_menu(items, shake(), shake_back())
@@ -38,4 +38,4 @@ class MainMenu(Menu):
     
     def on_quit(self):
         """Called when the user presses escape."""
-        sys.exit()
+        pass
