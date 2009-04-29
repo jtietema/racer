@@ -22,6 +22,17 @@
   <defs
      id="defs3229">
     <linearGradient
+       id="linearGradient3294">
+      <stop
+         style="stop-color:#ff0000;stop-opacity:1;"
+         offset="0"
+         id="stop3296" />
+      <stop
+         style="stop-color:#fffb00;stop-opacity:0;"
+         offset="1"
+         id="stop3298" />
+    </linearGradient>
+    <linearGradient
        id="linearGradient3776">
       <stop
          style="stop-color:#000000;stop-opacity:0.43165466;"
@@ -61,6 +72,15 @@
          stdDeviation="17.141068"
          id="feGaussianBlur4308" />
     </filter>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3294"
+       id="linearGradient3300"
+       x1="453.17355"
+       y1="527.5"
+       x2="453.46176"
+       y2="466.82776"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -75,7 +95,7 @@
      inkscape:current-layer="layer1"
      inkscape:document-units="px"
      showgrid="false"
-     showguides="false"
+     showguides="true"
      inkscape:guide-bbox="true"
      inkscape:window-width="1319"
      inkscape:window-height="858"
@@ -86,49 +106,21 @@
        position="428.40625,500.40625"
        id="guide3756" />
     <sodipodi:guide
-       orientation="1,0"
-       position="397.75,487.75"
-       id="guide3758" />
+       orientation="0,1"
+       position="470.5,495"
+       id="guide2504" />
     <sodipodi:guide
        orientation="1,0"
-       position="390.5,479.5"
-       id="guide3760" />
+       position="398,239"
+       id="guide2510" />
     <sodipodi:guide
        orientation="1,0"
-       position="569.375,507.25"
-       id="guide3762" />
-    <sodipodi:guide
-       orientation="1,0"
-       position="454.84644,404.99541"
-       id="guide3768" />
-    <sodipodi:guide
-       orientation="1,0"
-       position="529.62298,422.14275"
-       id="guide3770" />
+       position="509,235.5"
+       id="guide2512" />
     <sodipodi:guide
        orientation="0,1"
-       position="495.3283,376.18081"
-       id="guide3772" />
-    <sodipodi:guide
-       orientation="1,0"
-       position="418.25,346"
-       id="guide3790" />
-    <sodipodi:guide
-       orientation="1,0"
-       position="489,332"
-       id="guide3792" />
-    <sodipodi:guide
-       orientation="0,1"
-       position="357.79603,470.22601"
-       id="guide3800" />
-    <sodipodi:guide
-       orientation="0,1"
-       position="469.5189,295.92419"
-       id="guide3804" />
-    <sodipodi:guide
-       orientation="0,1"
-       position="498.86384,397.92434"
-       id="guide4312" />
+       position="425.75,240.5"
+       id="guide2514" />
   </sodipodi:namedview>
   <metadata
      id="metadata3232">
@@ -153,7 +145,10 @@
        x="383.754"
        y="298.25928"
        rx="5"
-       ry="10" />
+       ry="10"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <rect
        style="opacity:1;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect3798"
@@ -162,7 +157,10 @@
        x="505.59695"
        y="298.12753"
        rx="5"
-       ry="10" />
+       ry="10"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <rect
        style="opacity:1;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect3802"
@@ -171,7 +169,10 @@
        x="509.9505"
        y="472.07581"
        rx="5"
-       ry="10" />
+       ry="10"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <rect
        style="opacity:1;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect3806"
@@ -180,51 +181,74 @@
        x="381.25708"
        y="472.42935"
        rx="5"
-       ry="10" />
-    <rect
-       style="opacity:1;fill:#d20000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.84282243;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       ry="10"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
+    <path
+       style="fill:#d20000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.84282243;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+       d="M 408.16341,267.96451 L 499.49456,267.96451 C 507.36075,267.96451 517.69347,280.88959 517.69347,291.9759 L 518.19347,337.5 C 518.19347,352.5 514.60337,369.5017 515.19347,398.50001 C 515.69347,423.50001 515.69347,443.01207 517.69347,463.51207 L 517.69347,516.02413 C 517.69347,527.11044 511.36075,536.03552 503.49456,536.03552 L 404.16341,536.03552 C 396.29722,536.03552 389.96451,527.11044 389.96451,516.02413 L 390.46451,464.51207 C 390.46451,443.51207 392.78213,429.99273 393.46451,398.00001 C 393.96451,371.00001 390.96451,350.48796 390.46451,337.98796 L 389.96451,291.9759 C 389.96451,280.88959 400.29722,267.96451 408.16341,267.96451 z"
        id="rect3239"
-       width="127.72896"
-       height="276.07101"
-       x="389.96451"
-       y="259.96451"
-       rx="14.198905"
-       ry="20.011393" />
+       sodipodi:nodetypes="ccccccccccccccc"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <path
        sodipodi:nodetypes="ccccc"
        id="path3752"
-       d="M 410.41457,267.40824 L 424.76102,267.53247 C 424.76102,267.53247 427.65443,272.62549 427.89554,287.15923 L 397.63541,287.28345 C 396.79149,273.37081 410.41457,267.40824 410.41457,267.40824 z"
-       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.97900414px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+       d="M 410.41457,273.40824 L 424.76102,273.53247 C 424.76102,273.53247 427.65443,278.62549 427.89554,293.15923 L 397.63541,293.28345 C 396.79149,279.37081 410.41457,273.40824 410.41457,273.40824 z"
+       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.97900414px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <path
        style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.97900414px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 498.86282,267.99403 L 484.51639,268.11826 C 484.51639,268.11826 481.62298,273.21128 481.38187,287.74502 L 511.642,287.86924 C 512.48592,273.9566 498.86282,267.99403 498.86282,267.99403 z"
+       d="M 498.86282,273.99403 L 484.51639,274.11826 C 484.51639,274.11826 481.62298,279.21128 481.38187,293.74502 L 511.642,293.86924 C 512.48592,279.9566 498.86282,273.99403 498.86282,273.99403 z"
        id="path3754"
-       sodipodi:nodetypes="ccccc" />
+       sodipodi:nodetypes="ccccc"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <path
-       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.77182388px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 396.15177,370.80322 L 418.50477,398.37621 L 489.07994,398.37621 L 512.18641,370.21024 C 512.18641,370.21024 499.37739,332.85331 474.01051,332.85331 L 433.07188,332.85331 C 405.19343,332.85331 396.15177,370.80322 396.15177,370.80322 z"
+       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.75193864px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 399.10406,370.79802 L 420.31713,398.37486 L 487.2932,398.37486 L 509.22132,370.20495 C 509.22132,370.20495 497.06552,332.84281 472.99226,332.84281 L 434.14137,332.84281 C 407.68463,332.84281 399.10406,370.79802 399.10406,370.79802 z"
        id="path3766"
-       sodipodi:nodetypes="ccccccc" />
+       sodipodi:nodetypes="ccccccc"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <path
        style="fill:url(#linearGradient3782);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 444.88195,268.0015 C 444.88195,268.0015 435.09282,290.98168 435.09282,326.31372 L 471.23733,326.31371 C 471.48833,290.11992 461.6992,268.0015 461.6992,268.0015 L 444.88195,268.0015 z"
        id="path3774"
-       sodipodi:nodetypes="ccccc" />
+       sodipodi:nodetypes="ccccc"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <path
-       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.82070172px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 395.89916,380.41725 L 417.78965,410.84793 L 417.55171,429.95557 C 417.07583,444.46322 395.42493,467.10929 395.42493,467.10929 L 395.89916,380.41725 z"
+       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.79955721px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 398.86433,380.41339 L 419.63848,410.84832 L 419.41267,429.95863 C 418.96106,444.46831 398.41429,467.11754 398.41429,467.11754 L 398.86433,380.41339 z"
        id="path3784"
-       sodipodi:nodetypes="ccccc" />
+       sodipodi:nodetypes="ccccc"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <path
-       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.82517314px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 512.18057,380.24262 L 490.04976,410.67173 L 490.2903,429.77838 C 490.77141,444.28528 512.66001,466.93018 512.66001,466.93018 L 512.18057,380.24262 z"
+       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.80391341px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 509.21578,380.23874 L 488.21356,410.6721 L 488.44184,429.78142 C 488.89841,444.29034 509.67077,466.93841 509.67077,466.93841 L 509.21578,380.23874 z"
        id="path3786"
-       sodipodi:nodetypes="ccccc" />
+       sodipodi:nodetypes="ccccc"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <path
-       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.84282243px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 396.18727,474.88085 C 413.68727,485.63085 489,485.94211 512.15091,475.94211 C 512.15091,475.94211 493.32565,458.96188 489.05858,446.58047 L 419.02859,446.22671 C 413.75752,459.66938 396.18727,474.88085 396.18727,474.88085 z"
+       style="fill:#85868b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.82110798px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 399.13775,474.89019 C 415.74531,485.64169 487.21734,485.95299 509.18763,475.95159 C 509.18763,475.95159 491.32239,458.96899 487.27293,446.58585 L 420.81424,446.23204 C 415.81198,459.67659 399.13775,474.89019 399.13775,474.89019 z"
        id="path3788"
-       sodipodi:nodetypes="ccccc" />
+       sodipodi:nodetypes="ccccc"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
     <path
        sodipodi:type="arc"
        style="opacity:0.47435901;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter4306)"
@@ -234,6 +258,17 @@
        sodipodi:rx="25.632622"
        sodipodi:ry="31.466251"
        d="M 357.79604,399.59738 A 25.632622,31.466251 0 1 1 306.5308,399.59738 A 25.632622,31.466251 0 1 1 357.79604,399.59738 z"
-       transform="matrix(1.9442186,0,0,1.4543947,-189.45182,-173.4484)" />
+       transform="matrix(1.5931035,0,0,1.2001541,-76.824234,-68.854505)"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
+    <path
+       style="fill:url(#linearGradient3300);fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:1"
+       d="M 407,509 C 439,504.75 466,505 499,509 C 508.22907,513.40517 509,527.5 509,527.5 C 469.5,521 439.5,521 398,527.75 C 398,527.75 396.47946,512.98505 407,509 z"
+       id="path2506"
+       sodipodi:nodetypes="ccccc"
+       inkscape:export-filename="/home/jeroen/develop/python/racer/img/car.png"
+       inkscape:export-xdpi="354.09836"
+       inkscape:export-ydpi="354.09836" />
   </g>
 </svg>
