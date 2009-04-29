@@ -5,16 +5,18 @@ from game_state import state
 from car import PlayerCar
 
 class Race(Scene):
-    def __init__(self, map_layer, cars):
+    def __init__(self, track, cars):
         Scene.__init__(self)
         
-        self.map_layer = map_layer
+        self.track_layer = ScrollableLayer()
+        self.track_layer.add(track)
+        self.track = track
         
         self.cars = cars
         self.cars_layer = ScrollableLayer()
         
         self.scroller = ScrollingManager()
-        self.scroller.add(self.map_layer)
+        self.scroller.add(self.track_layer, z=-1)
         self.scroller.add(self.cars_layer)
         
         num_player_cars = 0
@@ -23,9 +25,7 @@ class Race(Scene):
             self.cars_layer.add(car)
             
             # Set the car's position.
-            # TODO: valid position
-            car.x = self.map_layer.px_width // 2
-            car.y = self.map_layer.px_height // 2
+            car.position = track.get_start()
             
             if isinstance(car, PlayerCar):
                 num_player_cars += 1
@@ -43,7 +43,8 @@ class Race(Scene):
     def update(self, dt):
         """Updates all the cars."""
         for car in self.cars:
-            car.update(dt)
+            grip = self.track.get_grip_at(car.position)
+            car.update(dt, grip)
             
             if isinstance(car, PlayerCar):
                 self.scroller.set_focus(*car.position)

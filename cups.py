@@ -2,6 +2,9 @@ import os
 from glob import glob
 
 import tiled2cocos
+import cocos
+
+from track import Track
 
 
 __all__ = ['list', 'load']
@@ -17,21 +20,26 @@ class Cup(object):
     def __init__(self, name):
         # TODO: apply sorting
         # TODO: add configuration files
-        self.map_files = glob(os.path.join(CUPS_FOLDER, name, '*.tmx'))
+        #self.map_files = glob(os.path.join(CUPS_FOLDER, name, '*.tmx'))
+        f = open(os.path.join(CUPS_FOLDER, name, 'tracklist.txt'), 'r')
+        tracklist = f.read()
+        self.track_names = tracklist.split('\n')
+        #self.map_files = glob(os.path.join(CUPS_FOLDER, name,'track*.png'))
         self.current_index = 0
+        self.name = name
     
     def has_next_map(self):
         """Returns true if the cup has more maps, false otherwise."""
-        return self.current_index < len(self.map_files)
+        return self.current_index < len(self.track_names)
     
     def next_map(self):
         """Returns the RectMapLayer instance for the next map, or None
            if no next map was found."""
         if self.has_next_map():
-            map_path = self.map_files[self.current_index]
+            track_name = self.track_names[self.current_index]
             self.current_index += 1
-            return tiled2cocos.load_map(map_path)
-        
+            #return tiled2cocos.load_map(map_path)
+            return Track(self.name, track_name)
         return None 
 
 

@@ -1,7 +1,3 @@
-index = [
-    'tyres',
-    'engines'
-]
 
 options = {
     'chassis': {
@@ -43,3 +39,6 @@ options = {
 chassis = options['chassis']
 engine = options['engine']
 tyres = options['tyres']
+
+index = options.keys()
+mod = len(options)
