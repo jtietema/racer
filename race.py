@@ -4,6 +4,7 @@ from cocos import menu
 from cocos.layer import ColorLayer, Layer
 from cocos.director import director
 from pyglet.window import key
+import pyglet.clock
 
 from game_state import state
 from car import PlayerCar
@@ -12,6 +13,8 @@ import util
 class Race(Scene):
     def __init__(self, track, cars):
         Scene.__init__(self)
+        
+        self.finished = False
         
         self.track_layer = ScrollableLayer()
         self.track_layer.px_width = track.get_size()[0]
@@ -38,6 +41,7 @@ class Race(Scene):
             if isinstance(car, PlayerCar):
                 num_player_cars += 1
                 self.scroller.set_focus(*car.position)
+                self.player_car = car
             
             self.stats[car] = Stats()
             
@@ -92,17 +96,29 @@ class Race(Scene):
                 self.stats[car].in_checkpoint = False
                 self.stats[car].pre_checkpoint = False
             
+            finished = False
+            
             # update laps
             if self.stats[car].checkpoint == self.track.get_checkpoints():
                 self.stats[car].checkpoint = 0
-                self.stats[car].laps += 1
-                print 'Laps ', self.stats[car].laps
-                if self.stats[car].laps > self.track.get_laps():
+                if self.stats[car].laps >= self.track.get_laps():                    
+                    # Stop the car, disabling any controls in the process.
                     print 'Finished'
-            
-            if isinstance(car, PlayerCar):
-                self.hud.update_laps(self.stats[car].laps)
-                self.scroller.set_focus(*car.position)
+                    
+                    car.stop()
+                    
+                    finished = True
+                else:
+                    self.stats[car].laps += 1
+                    print 'Laps ', self.stats[car].laps
+                    
+            if isinstance(car, PlayerCar) and not self.finished:
+                if finished:
+                    # The race is over since the player car finished.
+                    self.finished = True
+                else:
+                    self.hud.update_laps(self.stats[car].laps)
+                    self.scroller.set_focus(*car.position)
 
 
 class HUD(Layer):

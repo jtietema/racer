@@ -74,6 +74,8 @@ class Car(CocosNode):
         
         # The direction in which we are rotating.
         self.rot_dir = 0
+        
+        self.stopping = False
     
     def set_part_dependant_properties(self):
         """Sets properties that depend on the car's parts. These mainly
@@ -156,11 +158,22 @@ class Car(CocosNode):
             # Cap the speed.
             if speed * speed_sig < 0:
                 speed = 0
+                
+                if self.stopping:
+                    self.accel_dir = 0
         
         return speed
     
     def is_valid_move(self, (target_x, target_y)):
         return True
+    
+    def disable_controls(self):
+        pass
+    
+    def stop(self):
+        self.disable_controls()
+        self.accel_dir = -1
+        self.stopping = True
     
     mass    = property(lambda self: self.chassis_properties['mass'])
     power   = property(lambda self: self.engine_properties['power'])
@@ -235,14 +248,23 @@ class Car(CocosNode):
 
 
 class PlayerCar(Car):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):        
         self.keyboard = key.KeyStateHandler()
         director.window.push_handlers(self.keyboard)
         
         Car.__init__(self, *args, **kwargs)
         
+    def reset(self, *args, **kwargs):
+        super(PlayerCar, self).reset(*args, **kwargs)
+        
+        self.controls_enabled = True
+    
+    def disable_controls(self):
+        self.controls_enabled = False
+        
     def update(self, dt, friction):
-        self.rot_dir = self.keyboard[key.RIGHT] - self.keyboard[key.LEFT]
-        self.accel_dir = self.keyboard[key.UP] - self.keyboard[key.DOWN]
+        if self.controls_enabled:
+            self.rot_dir = self.keyboard[key.RIGHT] - self.keyboard[key.LEFT]
+            self.accel_dir = self.keyboard[key.UP] - self.keyboard[key.DOWN]
         
         Car.update(self, dt, friction)
