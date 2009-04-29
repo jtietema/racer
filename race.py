@@ -5,6 +5,8 @@ from cocos.layer import ColorLayer, Layer
 from cocos.director import director
 from pyglet.window import key
 import pyglet.clock
+from cocos.actions.instant_actions import Hide
+from cocos.actions.interval_actions import FadeIn, AccelDeccel
 
 from game_state import state
 from car import PlayerCar
@@ -116,10 +118,23 @@ class Race(Scene):
                 if finished:
                     # The race is over since the player car finished.
                     self.finished = True
+                    self.show_finished_message()
+                    # pyglet.clock.schedule_once(self.progress_to_laptimes, 10)
                 else:
                     self.hud.update_laps(self.stats[car].laps)
                     self.scroller.set_focus(*car.position)
-
+    
+    def show_finished_message(self):
+        """Displays a message explaining the player that he finished."""
+        label = util.Label(text='You finished!', anchor_y='bottom', font_size=40,
+            background=(0, 0, 0, 125))
+        
+        label.x = director.window.width / 2 - label.width / 2
+        label.y = director.window.height / 2
+        self.add(label, z=100)
+        
+        label.opacity = 0
+        label.do(AccelDeccel(FadeIn(2)))
 
 class HUD(Layer):
     def __init__(self, lap_count):
