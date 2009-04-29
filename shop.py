@@ -66,7 +66,7 @@ class OptionsWidget(cocos.layer.Layer):
             elif collisions[0] is self.controls[1]:
                 self.index -= 1
             # normalize index
-            self.index = self.index % parts.mod
+            self.index = self.index % len(parts.index)
             # repopulate spinnerbox
             self.options = self.options_to_sprites(
                 parts.options[parts.index[self.index]])

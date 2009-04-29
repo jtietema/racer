@@ -2,18 +2,22 @@ index = [
     'tyres',
     'engines'
 ]
-mod = 2
+
 options = {
     'chassis': {
         'fellali': {
             'name': 'Fellali',
             'image': 'chassis.png',
             'mass': 3,
+            'tyres_tx_offset': 62,
+            'tyres_ty_offset': 75,
+            'tyres_bx_offset': 65,
+            'tyres_by_offset': -90,
             'price': 0
         }
     },
 
-    'engines': {
+    'engine': {
         'basic': {
             'name': 'Basic Engine',
             'power': 3,
@@ -30,8 +34,12 @@ options = {
         'second_hand': {
             'name': 'Second Hand',
             'image': 'tyre.png',
-            'friction': 0.3,
+            'grip': 0.3,
             'price': 0
         }
     }
 }
+
+chassis = options['chassis']
+engine = options['engine']
+tyres = options['tyres']
