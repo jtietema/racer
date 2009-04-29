@@ -48,8 +48,6 @@ class Car(CocosNode):
     def __init__(self, **kwargs):
         CocosNode.__init__(self)
         
-        self.scale = 0.3
-        
         self.reset()
         
         # Set the car's parts.
@@ -66,6 +64,8 @@ class Car(CocosNode):
     def reset(self, rotation=0):
         """Resets some properties of the car, such as rotation and speed.
            This is useful when switching races."""
+        self.scale = 0.3
+           
         self.speed = 0
         self.rotation = rotation
         

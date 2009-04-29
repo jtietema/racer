@@ -5,6 +5,7 @@ import pyglet
 
 import util
 import parts
+from game_state import state
 
 class Shop(cocos.scene.Scene):
     def __init__(self):
@@ -19,8 +20,9 @@ class ShopBackground(cocos.layer.Layer):
         background.position = 1024/2, 768/2
         self.add(background, z=-1)
         
-        car = cocos.sprite.Sprite('car.png')
-        car.position = 300, 500
+        car = state.profile.car
+        car.position = (300, 500)
+        car.scale = 1
         self.add(car)
         
         self.add(OptionsWidget())
