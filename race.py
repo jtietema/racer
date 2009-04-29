@@ -97,7 +97,7 @@ class Race(Scene):
                 self.stats[car].checkpoint = 0
                 self.stats[car].laps += 1
                 print 'Laps ', self.stats[car].laps
-                if self.stats[car].laps == self.track.get_laps():
+                if self.stats[car].laps > self.track.get_laps():
                     print 'Finished'
             
             if isinstance(car, PlayerCar):
