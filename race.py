@@ -7,6 +7,7 @@ from pyglet.window import key
 
 from game_state import state
 from car import PlayerCar
+import util
 
 class Race(Scene):
     def __init__(self, track, cars):
@@ -45,7 +46,10 @@ class Race(Scene):
         
         assert num_player_cars == 1
         
-        self.add(self.scroller)
+        self.hud = HUD(self.track.get_laps())
+        
+        self.add(self.scroller, z=0)
+        self.add(self.hud, z=1)
         
         self.schedule(self.update)
         
@@ -93,11 +97,33 @@ class Race(Scene):
                 self.stats[car].checkpoint = 0
                 self.stats[car].laps += 1
                 print 'Laps ', self.stats[car].laps
-                if self.stats[car].laps == self.track.get_laps():
+                if self.stats[car].laps > self.track.get_laps():
                     print 'Finished'
             
             if isinstance(car, PlayerCar):
+                self.hud.update_laps(self.stats[car].laps)
                 self.scroller.set_focus(*car.position)
+
+
+class HUD(Layer):
+    def __init__(self, lap_count):
+        Layer.__init__(self)
+        
+        self.lap_count = lap_count
+        
+        self.laps_label = util.Label(text=self.get_laps_text(1),
+            font_size=25, background=(0, 0, 0, 125),
+            anchor_y='bottom')
+        self.laps_label.y = director.window.height - self.laps_label.height
+                
+        self.add(self.laps_label)
+    
+    def get_laps_text(self, num_laps):
+        return "Lap %d/%d" % (num_laps, self.lap_count)
+    
+    def update_laps(self, num_laps):
+        self.laps_label.text = self.get_laps_text(num_laps)
+
 
 class MenuLayer(Layer):
     def __init__(self):
@@ -126,8 +152,7 @@ class InGameMenu(menu.Menu):
 
 class Stats():
     def __init__(self):
-        self.laps = 0
+        self.laps = 1
         self.checkpoint = -1
         self.pre_checkpoint = False
         self.in_checkpoint = False
-
