@@ -3,6 +3,7 @@ from cocos.tiles import ScrollableLayer, ScrollingManager
 from cocos import menu
 from cocos.layer import ColorLayer, Layer
 from cocos.director import director
+from cocos.text import RichLabel
 from pyglet.window import key
 
 from game_state import state
@@ -40,7 +41,10 @@ class Race(Scene):
         
         assert num_player_cars == 1
         
-        self.add(self.scroller)
+        self.hud = HUD()
+        
+        self.add(self.scroller, z=0)
+        self.add(self.hud, z=1)
         
         self.schedule(self.update)
         
@@ -67,6 +71,16 @@ class Race(Scene):
             
             if isinstance(car, PlayerCar):
                 self.scroller.set_focus(*car.position)
+
+
+class HUD(Layer):
+    def __init__(self):
+        Layer.__init__(self)
+        
+        self.laps_label = RichLabel(text='1 / 3', anchor_x='left')
+                
+        self.add(self.laps_label)
+
 
 class MenuLayer(Layer):
     def __init__(self):
