@@ -48,6 +48,8 @@ class Car(CocosNode):
     def __init__(self, **kwargs):
         CocosNode.__init__(self)
         
+        self.scale = 0.3
+        
         self.reset()
         
         # Set the car's parts.
