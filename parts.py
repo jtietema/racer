@@ -1,4 +1,3 @@
-
 options = {
     'chassis': {
         'fellali': {
@@ -10,6 +9,16 @@ options = {
             'tyres_bx_offset': 65,
             'tyres_by_offset': -90,
             'price': 0
+        },
+        'blue': {
+            'name': 'Blue',
+            'image': 'body2.png',
+            'mass': 8,
+            'tyres_tx_offset': 77,
+            'tyres_ty_offset': 75,
+            'tyres_bx_offset': 80,
+            'tyres_by_offset': -90,
+            'price': 100
         }
     },
 
@@ -21,7 +30,7 @@ options = {
         },
         'monster_truck': {
             'name': 'Monster Truck Engine',
-            'power': 8,
+            'power': 10,
             'price': 1000
         }
     },
@@ -39,6 +48,3 @@ options = {
 chassis = options['chassis']
 engine = options['engine']
 tyres = options['tyres']
-
-index = options.keys()
-mod = len(options)

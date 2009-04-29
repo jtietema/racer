@@ -23,7 +23,7 @@ class MainMenu(Menu):
             MenuItem('New game', self.on_new_game),
             MenuItem('Shop', self.on_shop),
             MenuItem('Options', None),
-            MenuItem('Quit', self.on_quit)
+            MenuItem('Quit', sys.exit)
         ]
         
         self.create_menu(items, shake(), shake_back())
@@ -31,11 +31,11 @@ class MainMenu(Menu):
     def on_new_game(self):
         state.cup = cups.load(cups.list()[0])
         race = Race(state.cup.next_map(), [state.profile.car])
-        director.replace(race)
+        director.push(race)
     
     def on_shop(self):
-        director.replace(Shop())
+        director.push(Shop())
     
     def on_quit(self):
         """Called when the user presses escape."""
-        sys.exit()
+        pass
