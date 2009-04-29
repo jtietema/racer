@@ -198,6 +198,7 @@ class Car(CocosNode):
             self.try_remove(tyre_name)
         self._add_tyres(tyres_name)
         self.set_part_dependant_properties()
+        self.align_tyres()
     tyres = property(lambda self: self.tyres_name, _set_tyres)
     tyres_properties = property(lambda self: parts.tyres[self.tyres_name],
         doc='Returns the properties of the tyres, as defined in the parts config.')

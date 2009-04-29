@@ -14,6 +14,16 @@ options = {
             'tyres_bx_offset': 65,
             'tyres_by_offset': -90,
             'price': 0
+        },
+        'blue': {
+            'name': 'Blue',
+            'image': 'body2.png',
+            'mass': 4,
+            'tyres_tx_offset': 62,
+            'tyres_ty_offset': 75,
+            'tyres_bx_offset': 65,
+            'tyres_by_offset': -90,
+            'price': 100
         }
     },
 
