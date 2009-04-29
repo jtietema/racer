@@ -119,7 +119,7 @@ class Race(Scene):
                     # The race is over since the player car finished.
                     self.finished = True
                     self.show_finished_message()
-                    # pyglet.clock.schedule_once(self.progress_to_laptimes, 10)
+                    pyglet.clock.schedule_once(self.progress_to_results, 3)
                 else:
                     self.hud.update_laps(self.stats[car].laps)
                     self.scroller.set_focus(*car.position)
@@ -136,6 +136,11 @@ class Race(Scene):
         
         label.scale = 0
         label.do(ScaleTo(1, 0.75))
+    
+    def progress_to_results(self, dt):
+        from results import Results
+        
+        director.replace(Results())
 
 class HUD(Layer):
     def __init__(self, lap_count):
