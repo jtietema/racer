@@ -1,13 +1,26 @@
 import cocos
 import pyglet
+from cocos.layer import ColorLayer
 
 class Label(cocos.text.Label):
     '''Subclass to make cocos Label sane...'''
     def __init__(self, *args, **kwargs):
-        if 'option_name' in kwargs:
-            self.option_name = kwargs.pop('option_name')
+        # Properties can be used to store additional data on the label.
+        if 'properties' in kwargs:
+            self.properties = kwargs.pop('properties')
+        else:
+            self.properties = {}
+        
+        # An optional background can be rendered behind the label.
+        has_bg = ('background' in kwargs)
+        if has_bg:
+            bg = kwargs.pop('background')
         
         cocos.text.Label.__init__(self, *args, **kwargs)
+        
+        if has_bg:
+            bg_layer = ColorLayer(*bg, **{'width': self.width, 'height': self.height})
+            self.add(bg_layer, z=-1)
     
     width   = property(lambda self: self.element.content_width)
     height  = property(lambda self: self.element.content_height)

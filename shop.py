@@ -16,6 +16,7 @@ class Shop(Scene):
     def __init__(self):
         super( Shop, self ).__init__()
         self.add(ShopBackground())
+        state.profile.car.reset()
 
 
 class ShopBackground(Layer):
@@ -87,7 +88,7 @@ class OptionsWidget(Layer):
         for option_name, properties in self.options[group_name].items():
             label = util.Label(properties['name'],
                 position=(750, y), color=(0,0,0,255), font_name=self.font,
-                font_size=16, option_name=option_name)
+                font_size=16, properties={'option_name': option_name})
             self.add(label)
             self.option_sprites.append(label)
             y -= 25
@@ -120,7 +121,7 @@ class OptionsWidget(Layer):
         # Check if one of the items was pressed.
         collisions = util.collide_single((x,y), self.option_sprites)
         if len(collisions) > 0:
-            option_name = collisions[0].option_name
+            option_name = collisions[0].properties['option_name']
             setattr(state.profile.car, self.groups[self.group_index], option_name)
             
             state.profile.save()

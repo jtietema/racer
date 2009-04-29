@@ -86,11 +86,10 @@ class Car(CocosNode):
         # Braking depends on the friction, as well as the mass of the car.
         self.brake_multiplier = self.friction_multiplier * (10 - self.mass)
         
-    def update(self, dt, grip):
+    def update(self, dt, friction):
         """Update the car's state."""
-        #terrain = 'asphalt'
         
-        self.speed = self.calculate_speed(dt, grip)
+        self.speed = self.calculate_speed(dt, friction)
         
         rot_factor = min(1, abs(self.speed) / 200)
         self.rotation = (self.rotation + (rot_factor * ROTATION_SPEED * self.rot_dir * signum(self.speed) * dt)) % 360
@@ -109,7 +108,7 @@ class Car(CocosNode):
             self.x = target_x
             self.y = target_y
     
-    def calculate_speed(self, dt, grip):
+    def calculate_speed(self, dt, friction):
         """Calculates the car's new speed based on its current speed, the
            amount of time passed and physical properties like the friction
            and the car's mass."""
@@ -131,7 +130,7 @@ class Car(CocosNode):
             accel_multiplier = self.accel_multiplier * self.accel_dir * ACCEL_MULTIPLIERS[accel_sig]
             
             # The terrain friction will be used in the calculation.
-            speed_multiplier = accel_multiplier * (grip / 255.0)
+            speed_multiplier = accel_multiplier * (friction / 255.0)
             
             speed += speed_multiplier * dt
             
@@ -152,7 +151,7 @@ class Car(CocosNode):
             
             # We use a large constant in the calculation to increase the effect
             # of slowing down.
-            speed -= speed_sig * slow_down_multiplier * 2000 * (grip / 255.0) * dt
+            speed -= speed_sig * slow_down_multiplier * 2000 * (friction / 255.0) * dt
             
             # Cap the speed.
             if speed * speed_sig < 0:
@@ -242,8 +241,8 @@ class PlayerCar(Car):
         
         Car.__init__(self, *args, **kwargs)
         
-    def update(self, dt, grip):
+    def update(self, dt, friction):
         self.rot_dir = self.keyboard[key.RIGHT] - self.keyboard[key.LEFT]
         self.accel_dir = self.keyboard[key.UP] - self.keyboard[key.DOWN]
         
-        Car.update(self, dt, grip)
+        Car.update(self, dt, friction)
