@@ -3,16 +3,9 @@ import pyglet
 
 class Label(cocos.text.Label):
     '''Subclass to make cocos Label sane...'''
-    def _get_width(self):
-        return self.element.content_width
-    width = property(_get_width)
-    
-    def _get_height(self):
-        return self.element.content_height
-    height = property(_get_height)
-    
-    def getText(self):
-        return self.element._document.text
+    width   = property(lambda self: self.element.content_width)
+    height  = property(lambda self: self.element.content_height)
+    text    = property(lambda self: self.element._document.text)
 
 
 def collide_single((x,y), objects):

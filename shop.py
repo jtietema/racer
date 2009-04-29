@@ -81,7 +81,7 @@ class OptionsWidget(cocos.layer.Layer):
         collisions = util.collide_single((x,y), self.controls_items)
         if len(collisions) != 0:
             # check which option was pressed
-            option_name = collisions[0].getText()
+            option_name = collisions[0].text
             print option_name, collisions[0].position
     
     def options_to_sprites(self, options):

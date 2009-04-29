@@ -1,6 +1,7 @@
 from cocos.scene import Scene
 from cocos.tiles import ScrollableLayer, ScrollingManager
 from cocos import menu
+from cocos.layer import ColorLayer, Layer
 from cocos.director import director
 from pyglet.window import key
 
@@ -45,6 +46,19 @@ class Race(Scene):
         
         self.menu = None
         
+        director.window.push_handlers(self.on_key_press)
+    
+    def on_key_press(self, symbol, modifier):
+        if symbol == key.ESCAPE:
+            self.menu = MenuLayer()
+            self.add(self.menu, z=100)
+            return True
+    
+    def remove_menu(self):
+        if self.menu is not None:
+            self.remove(self.menu)
+            self.menu = None
+        
     def update(self, dt):
         """Updates all the cars."""
         for car in self.cars:
@@ -54,19 +68,27 @@ class Race(Scene):
                 self.scroller.set_focus(*car.position)
 
 
+class MenuLayer(Layer):
+    def __init__(self):
+        Layer.__init__(self)
+        
+        self.add(ColorLayer(0, 0, 0, 100), z=0)
+        self.add(InGameMenu(), z=1)
+
+
 class InGameMenu(menu.Menu):
     def __init__(self):
-        menu.Menu.__init__('Game menu')
+        menu.Menu.__init__(self, 'Paused')
         
         items = [
-            MenuItem('Resume game', self.on_resume),
-            MenuItem('Leave race', director.pop)
+            menu.MenuItem('Resume game', self.on_resume),
+            menu.MenuItem('Leave race', director.pop)
         ]
         
-        self.create_menu(items, shake(), shake_back())
+        self.create_menu(items, menu.shake(), menu.shake_back())
     
     def on_resume(self):
-        self.parent.remove(self)
+        self.get_ancestor(Race).remove_menu()
     
     def on_quit(self):
         self.on_resume()
