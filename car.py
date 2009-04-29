@@ -84,11 +84,11 @@ class Car(Sprite):
         # Braking depends on the friction, as well as the mass of the car.
         self.brake_multiplier = self.friction_multiplier * (10 - MASS)
         
-    def update(self, dt):
+    def update(self, dt, grip):
         """Update the car's state."""
-        terrain = 'asphalt'
+        #terrain = 'asphalt'
         
-        self.speed = self.calculate_speed(dt, terrain)
+        self.speed = self.calculate_speed(dt, grip)
         
         if self.speed > 0:
             rot_factor = min(1, abs(self.speed) / 200)
@@ -107,7 +107,7 @@ class Car(Sprite):
             self.x = target_x
             self.y = target_y
     
-    def calculate_speed(self, dt, terrain):
+    def calculate_speed(self, dt, grip):
         """Calculates the car's new speed based on its current speed, the
            amount of time passed and physical properties like the friction
            and the car's mass."""
@@ -129,7 +129,7 @@ class Car(Sprite):
             accel_multiplier = self.accel_multiplier * self.accel_dir * ACCEL_MULTIPLIERS[accel_sig]
             
             # The terrain friction will be used in the calculation.
-            speed_multiplier = accel_multiplier * TERRAIN_FRICTIONS[terrain]
+            speed_multiplier = accel_multiplier * (grip / 255.0)
             
             speed += speed_multiplier * dt
             
@@ -150,7 +150,7 @@ class Car(Sprite):
             
             # We use a large constant in the calculation to increase the effect
             # of slowing down.
-            speed -= speed_sig * slow_down_multiplier * 2000 * TERRAIN_FRICTIONS[terrain] * dt
+            speed -= speed_sig * slow_down_multiplier * 2000 * (grip / 255.0) * dt
             
             # Cap the speed.
             if speed * speed_sig < 0:
@@ -169,8 +169,8 @@ class PlayerCar(Car):
         
         Car.__init__(self, *args, **kwargs)
         
-    def update(self, dt):
+    def update(self, dt, grip):
         self.rot_dir = self.keyboard[key.RIGHT] - self.keyboard[key.LEFT]
         self.accel_dir = self.keyboard[key.UP] - self.keyboard[key.DOWN]
         
-        Car.update(self, dt)
+        Car.update(self, dt, grip)

@@ -1,8 +1,3 @@
-index = [
-    'tyres',
-    'engines'
-]
-mod = 2
 options = {
     'chassis': {
         'fellali': {
@@ -35,3 +30,5 @@ options = {
         }
     }
 }
+index = options.keys()
+mod = len(options)
