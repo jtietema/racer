@@ -1,7 +1,6 @@
 import os
 from glob import glob
 
-import tiled2cocos
 import cocos
 
 from track import Track
@@ -18,13 +17,9 @@ class Cup(object):
        also takes care of loading the current map."""
     
     def __init__(self, name):
-        # TODO: apply sorting
-        # TODO: add configuration files
-        #self.map_files = glob(os.path.join(CUPS_FOLDER, name, '*.tmx'))
         f = open(os.path.join(CUPS_FOLDER, name, 'tracklist.txt'), 'r')
         tracklist = f.read()
         self.track_names = tracklist.split('\n')
-        #self.map_files = glob(os.path.join(CUPS_FOLDER, name,'track*.png'))
         self.current_index = 0
         self.name = name
     
@@ -38,7 +33,6 @@ class Cup(object):
         if self.has_next_map():
             track_name = self.track_names[self.current_index]
             self.current_index += 1
-            #return tiled2cocos.load_map(map_path)
             return Track(self.name, track_name)
         return None 
 
