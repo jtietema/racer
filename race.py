@@ -6,7 +6,7 @@ from cocos.director import director
 from pyglet.window import key
 import pyglet.clock
 from cocos.actions.instant_actions import Hide
-from cocos.actions.interval_actions import FadeIn, AccelDeccel
+from cocos.actions.interval_actions import ScaleTo
 
 from game_state import state
 from car import PlayerCar
@@ -129,12 +129,13 @@ class Race(Scene):
         label = util.Label(text='You finished!', anchor_y='bottom', font_size=40,
             background=(0, 0, 0, 125))
         
+        label.transform_anchor_x = label.width / 2
         label.x = director.window.width / 2 - label.width / 2
         label.y = director.window.height / 2
         self.add(label, z=100)
         
-        label.opacity = 0
-        label.do(AccelDeccel(FadeIn(2)))
+        label.scale = 0
+        label.do(ScaleTo(1, 0.75))
 
 class HUD(Layer):
     def __init__(self, lap_count):
