@@ -23,6 +23,13 @@ class Profile(object):
     
     def save(self):
         """Writes the profile to disk."""
+        if not config.has_section(self.name):
+            config.add_section(self.name)
+        config.set(self.name, 'money', self.money)
+        config.set(self.name, 'body', self.car.chassis)
+        config.set(self.name, 'tyres', self.car.tyres)
+        config.set(self.name, 'engine', self.car.engine)
+        
         config.write(open(os.path.expanduser('~/.RCr.cfg'), 'w'))
 
 
@@ -34,14 +41,15 @@ def list():
 def load(name):
     """Loads a previously stored profile."""
     money = config.getint(name, 'money')
-    return Profile(name, money=money)
+    body = config.get(name, 'body')
+    engine = config.get(name, 'engine')
+    tyres = config.get(name, 'tyres')
+    car = PlayerCar(chassis=body, engine=engine, tyres=tyres)
+    return Profile(name, car, money)
 
 
 def create(name):
     """Creates a new profile with the supplied name."""
-    if not config.has_section(name):
-        config.add_section(name)
-        config.set(name, 'money', 0)
     profile = Profile(name)
     profile.save()
     return profile
