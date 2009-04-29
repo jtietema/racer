@@ -11,10 +11,12 @@ import util
 import parts
 from game_state import state
 
+
 class Shop(Scene):
     def __init__(self):
         super( Shop, self ).__init__()
         self.add(ShopBackground())
+
 
 class ShopBackground(Layer):
     def __init__(self):
@@ -30,6 +32,7 @@ class ShopBackground(Layer):
         self.add(car)
         
         self.add(OptionsWidget(parts.options))
+
 
 class OptionsWidget(Layer):
     '''Widget on the right side of the screen showing all the parts you can buy
@@ -119,6 +122,8 @@ class OptionsWidget(Layer):
         if len(collisions) > 0:
             option_name = collisions[0].option_name
             setattr(state.profile.car, self.groups[self.group_index], option_name)
+            
+            state.profile.save()
             
             return
     

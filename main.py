@@ -13,7 +13,6 @@ director.init(width=1024, height=768, caption='RCr: Larry\'s Lawn')
 pyglet.resource.path = ['img', os.path.join('cups', 'garden')]
 pyglet.resource.reindex()
 
-state.profile = profiles.load('maik')
 state.cup = Cup('garden')
 
 menu_scene = MenuScene()
