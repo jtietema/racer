@@ -4,13 +4,19 @@ from cocos import menu
 from cocos.layer import ColorLayer, Layer
 from cocos.director import director
 from pyglet.window import key
+import pyglet.clock
+from cocos.actions.instant_actions import Hide
+from cocos.actions.interval_actions import FadeIn, AccelDeccel
 
 from game_state import state
 from car import PlayerCar
+import util
 
 class Race(Scene):
     def __init__(self, track, cars):
         Scene.__init__(self)
+        
+        self.finished = False
         
         self.track_layer = ScrollableLayer()
         self.track_layer.px_width = track.get_size()[0]
@@ -37,6 +43,7 @@ class Race(Scene):
             if isinstance(car, PlayerCar):
                 num_player_cars += 1
                 self.scroller.set_focus(*car.position)
+                self.player_car = car
             
             self.stats[car] = Stats()
             
@@ -45,7 +52,10 @@ class Race(Scene):
         
         assert num_player_cars == 1
         
-        self.add(self.scroller)
+        self.hud = HUD(self.track.get_laps())
+        
+        self.add(self.scroller, z=0)
+        self.add(self.hud, z=1)
         
         self.schedule(self.update)
         
@@ -88,16 +98,63 @@ class Race(Scene):
                 self.stats[car].in_checkpoint = False
                 self.stats[car].pre_checkpoint = False
             
+            finished = False
+            
             # update laps
             if self.stats[car].checkpoint == self.track.get_checkpoints():
                 self.stats[car].checkpoint = 0
-                self.stats[car].laps += 1
-                print 'Laps ', self.stats[car].laps
-                if self.stats[car].laps == self.track.get_laps():
+                if self.stats[car].laps >= self.track.get_laps():                    
+                    # Stop the car, disabling any controls in the process.
                     print 'Finished'
-            
-            if isinstance(car, PlayerCar):
-                self.scroller.set_focus(*car.position)
+                    
+                    car.stop()
+                    
+                    finished = True
+                else:
+                    self.stats[car].laps += 1
+                    print 'Laps ', self.stats[car].laps
+                    
+            if isinstance(car, PlayerCar) and not self.finished:
+                if finished:
+                    # The race is over since the player car finished.
+                    self.finished = True
+                    self.show_finished_message()
+                    # pyglet.clock.schedule_once(self.progress_to_laptimes, 10)
+                else:
+                    self.hud.update_laps(self.stats[car].laps)
+                    self.scroller.set_focus(*car.position)
+    
+    def show_finished_message(self):
+        """Displays a message explaining the player that he finished."""
+        label = util.Label(text='You finished!', anchor_y='bottom', font_size=40,
+            background=(0, 0, 0, 125))
+        
+        label.x = director.window.width / 2 - label.width / 2
+        label.y = director.window.height / 2
+        self.add(label, z=100)
+        
+        label.opacity = 0
+        label.do(AccelDeccel(FadeIn(2)))
+
+class HUD(Layer):
+    def __init__(self, lap_count):
+        Layer.__init__(self)
+        
+        self.lap_count = lap_count
+        
+        self.laps_label = util.Label(text=self.get_laps_text(1),
+            font_size=25, background=(0, 0, 0, 125),
+            anchor_y='bottom')
+        self.laps_label.y = director.window.height - self.laps_label.height
+                
+        self.add(self.laps_label)
+    
+    def get_laps_text(self, num_laps):
+        return "Lap %d/%d" % (num_laps, self.lap_count)
+    
+    def update_laps(self, num_laps):
+        self.laps_label.text = self.get_laps_text(num_laps)
+
 
 class MenuLayer(Layer):
     def __init__(self):
@@ -126,8 +183,7 @@ class InGameMenu(menu.Menu):
 
 class Stats():
     def __init__(self):
-        self.laps = 0
+        self.laps = 1
         self.checkpoint = -1
         self.pre_checkpoint = False
         self.in_checkpoint = False
-
