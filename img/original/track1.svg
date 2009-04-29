@@ -15,7 +15,10 @@
    inkscape:version="0.46"
    version="1.0"
    sodipodi:docname="track1.svg"
-   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   inkscape:export-filename="/home/jeroen/develop/python/racer/img/track1.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs4">
     <inkscape:perspective
@@ -36,9 +39,9 @@
      objecttolerance="10"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35"
-     inkscape:cx="949.29524"
-     inkscape:cy="1525.7699"
+     inkscape:zoom="0.7"
+     inkscape:cx="576.34783"
+     inkscape:cy="552.34614"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -80,5 +83,15 @@
        d="M 645.81736,469.20121 C 567.78978,546.50698 518.2589,861.64932 524.79499,1018.5975 C 532.30163,1224.5141 549.92953,1481.4093 722.25256,1592.0112 C 945.95056,1736.3651 1255.4914,1925.9424 1314.6254,1604.0198 C 1377.6812,1264.3636 1179.5133,1281.3419 1166.0013,1096.6539 C 1151.3617,896.55417 1408.0903,819.71098 1382.5678,535.24886 C 1366.7343,358.3276 741.45719,360.68341 645.81736,469.20121 z"
        id="path3157"
        sodipodi:nodetypes="ccccccc" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
+       id="rect3723"
+       width="250.0851"
+       height="42.201572"
+       x="-689.0058"
+       y="1531.7738"
+       rx="0"
+       ry="0"
+       transform="matrix(0.75392,-0.6569663,0.622466,0.7826468,0,0)" />
   </g>
 </svg>
