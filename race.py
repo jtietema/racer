@@ -1,3 +1,5 @@
+import bisect
+
 from cocos.scene import Scene
 from cocos.tiles import ScrollableLayer, ScrollingManager
 from cocos import menu
@@ -12,11 +14,18 @@ from game_state import state
 from car import PlayerCar
 import util
 
+
+class RaceException(Exception):
+    pass
+
+
 class Race(Scene):
     def __init__(self, track, cars):
         Scene.__init__(self)
         
         self.finished = False
+        
+        self.ranking = None
         
         self.track_layer = ScrollableLayer()
         self.track_layer.px_width = track.get_size()[0]
@@ -45,7 +54,7 @@ class Race(Scene):
                 self.scroller.set_focus(*car.position)
                 self.player_car = car
             
-            self.stats[car] = Stats()
+            self.stats[car] = Stats(car)
             
             # Reset the car's state.
             car.reset()
@@ -81,29 +90,41 @@ class Race(Scene):
             friction = self.track.get_friction_at(car.position)
             car.update(dt, friction)
             
+            # Create a short-named reference.
+            stats = self.stats[car]
+            
             # update checkpoints
             checkpoint = self.track.get_checkpoint_at(car.position)
-            if checkpoint == 1 and not self.stats[car].in_checkpoint:
-                self.stats[car].pre_checkpoint = True
-                self.stats[car].in_checkpoint = True
-            elif checkpoint == 2 and self.stats[car].pre_checkpoint and self.stats[car].in_checkpoint:
-                self.stats[car].pre_checkpoint = False
-                self.stats[car].checkpoint += 1
-                print 'Checkpoint', self.stats[car].checkpoint
-            elif checkpoint == 2 and not self.stats[car].pre_checkpoint and not self.stats[car].in_checkpoint:
-                self.stats[car].in_checkpoint = True
-                self.stats[car].checkpoint -= 1
-                print 'Checkpoint', self.stats[car].checkpoint
+            if checkpoint == 1 and not stats.in_checkpoint:
+                stats.pre_checkpoint = True
+                stats.in_checkpoint = True
+            elif checkpoint == 2 and stats.pre_checkpoint and stats.in_checkpoint:
+                stats.pre_checkpoint = False
+                stats.checkpoint += 1
+                print 'Checkpoint', stats.checkpoint
+            elif checkpoint == 2 and not stats.pre_checkpoint and not stats.in_checkpoint:
+                stats.in_checkpoint = True
+                stats.checkpoint -= 1
+                print 'Checkpoint', stats.checkpoint
             elif checkpoint == 0:
-                self.stats[car].in_checkpoint = False
-                self.stats[car].pre_checkpoint = False
+                stats.in_checkpoint = False
+                stats.pre_checkpoint = False
             
             finished = False
             
+            if stats.checkpoint >= 0:
+                stats.current_lap_time += dt
+            
             # update laps
-            if self.stats[car].checkpoint == self.track.get_checkpoints():
-                self.stats[car].checkpoint = 0
-                if self.stats[car].laps >= self.track.get_laps():                    
+            if stats.checkpoint == self.track.get_checkpoints():
+                # At finish.
+                stats.checkpoint = 0
+                
+                # Store the lap time and reset the current lap time.
+                stats.lap_times.append(stats.current_lap_time)
+                stats.current_lap_time = 0
+                
+                if stats.laps >= self.track.get_laps():                    
                     # Stop the car, disabling any controls in the process.
                     print 'Finished'
                     
@@ -111,15 +132,15 @@ class Race(Scene):
                     
                     finished = True
                 else:
-                    self.stats[car].laps += 1
-                    print 'Laps ', self.stats[car].laps
+                    stats.laps += 1
+                    print 'Laps ', stats.laps
                     
             if isinstance(car, PlayerCar) and not self.finished:
                 if finished:
                     # The race is over since the player car finished.
                     self.finish()
                 else:
-                    self.hud.update_laps(self.stats[car].laps)
+                    self.hud.update_laps(stats.laps)
                     self.scroller.set_focus(*car.position)
     
     def finish(self):
@@ -127,7 +148,17 @@ class Race(Scene):
            Also automatically progresses to the results screen."""
         self.finished = True
         
-        label = util.Label(text='You finished!', anchor_y='bottom', font_size=40,
+        self.ranking = self.determine_ranking()
+        
+        player_position = self.ranking.index(self.stats[self.player_car]) + 1
+        if player_position == 1:
+            finished_text = 'You won!'
+        elif player_position == len(self.ranking):
+            finished_text = 'You became last'
+        else:
+            finished_text = 'You finished %s' % (util.ordinal(player_position),)
+        
+        label = util.Label(text=finished_text, anchor_y='bottom', font_size=40,
             background=(0, 0, 0, 125))
         
         label.transform_anchor_x = label.width / 2
@@ -139,20 +170,42 @@ class Race(Scene):
         label.do(ScaleTo(1, 0.75) + Delay(3) + ScaleTo(0, 0.75)
             + CallFunc(self.remove, label) + CallFunc(self.show_results))
     
+    def determine_ranking(self):
+        """Returns a list with all the Stats instances sorted ascendingly
+           by total lap time. This method throws an exception if the race
+           is not finished yet."""
+        if not self.finished:
+            raise RaceException("Race not finished yet.")
+        
+        ranking = []
+        for stats in self.stats.values():
+            bisect.insort(ranking, stats)
+        
+        return ranking
+    
     def show_results(self):
         self.menu = MenuLayer(ResultsMenu)
         self.add(self.menu, z=100)
         
         self.menu.scale = 0
-        self.menu.do(ScaleTo(1, 0.75))
+        self.menu.do(ScaleTo(1, 1))
 
 
 class Stats():
-    def __init__(self):
+    def __init__(self, car):
+        self.car = car
+        self.current_lap_time = 0
+        self.lap_times = []
         self.laps = 1
         self.checkpoint = -1
         self.pre_checkpoint = False
         self.in_checkpoint = False
+    
+    def __cmp__(self, other):
+        return self.total_time > other.total_time
+    
+    total_time = property(lambda self: sum(self.lap_times),
+        doc="Returns the sum of all the lap times.")
 
 
 class HUD(Layer):
@@ -220,3 +273,6 @@ class ResultsMenu(menu.Menu):
 
     def on_back(self):
         director.pop()
+    
+    def on_quit(self):
+        pass

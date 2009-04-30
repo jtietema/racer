@@ -44,3 +44,8 @@ def signum(number):
     if number > 0: return 1
     elif number < 0: return -1
     return number
+
+
+def ordinal(n):
+    """Converts a number into an ordinal numbers"""
+    return str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, 'th')
