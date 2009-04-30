@@ -43,7 +43,7 @@ class Car(CocosNode):
     @classmethod
     def get_default(cls):
         """Returns an instance of Car with default configuration."""
-        return cls(chassis='fellali', engine='basic', tyres='second_hand')
+        return cls(body='fellali', engine='basic', tyres='second_hand')
     
     def __init__(self, **kwargs):
         CocosNode.__init__(self)
@@ -183,7 +183,7 @@ class Car(CocosNode):
         self.accel_dir = -1
         self.stopping = True
     
-    mass    = property(lambda self: self.chassis_properties['mass'])
+    mass    = property(lambda self: self.body_properties['mass'])
     power   = property(lambda self: self.engine_properties['power'])
     grip    = property(lambda self: self.tyres_properties['grip'])
     
@@ -195,17 +195,17 @@ class Car(CocosNode):
     engine = property(lambda self: self.engine_name, _set_engine)
     engine_properties = property(lambda self: parts.engine[self.engine_name])
     
-    def _add_chassis(self, chassis_name):
-        self.chassis_name = chassis_name
-        image_file = parts.chassis[self.chassis_name]['image']
-        self.add(Sprite(image_file), name='chassis', z=10)
-    def _set_chassis(self, chassis_name):
-        self.try_remove('chassis')
-        self._add_chassis(chassis_name)
+    def _add_body(self, body_name):
+        self.body_name = body_name
+        image_file = parts.body[self.body_name]['image']
+        self.add(Sprite(image_file), name='body', z=10)
+    def _set_body(self, body_name):
+        self.try_remove('body')
+        self._add_body(body_name)
         self.set_part_dependant_properties()
         self.align_tyres()
-    chassis = property(lambda self: self.chassis_name, _set_chassis)
-    chassis_properties = property(lambda self: parts.chassis[self.chassis_name],
+    body = property(lambda self: self.body_name, _set_body)
+    body_properties = property(lambda self: parts.body[self.body_name],
         doc='Returns the properties of the tyres, as defined in the parts config.')
     
     def _add_tyres(self, tyres_name):
@@ -228,7 +228,7 @@ class Car(CocosNode):
         doc='Returns the bottom two tyre Sprites.')
     
     def align_tyres(self):
-        """Aligns the tyres with the chassis."""
+        """Aligns the tyres with the body."""
         for tyre_name in TYRE_NAMES:
             # Fetch the corresponding Sprite object.
             tyre = self.get(tyre_name)
@@ -237,8 +237,8 @@ class Car(CocosNode):
             # bottom.
             tb = tyre_name[-2]
             
-            x = self.chassis_properties['tyres_' + tb + 'x_offset']
-            y = self.chassis_properties['tyres_' + tb + 'y_offset']
+            x = self.body_properties['tyres_' + tb + 'x_offset']
+            y = self.body_properties['tyres_' + tb + 'y_offset']
             
             # If the tyre is to be aligned on the left, flip the x offset.
             if tyre_name[-1] == 'l':

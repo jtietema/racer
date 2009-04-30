@@ -26,7 +26,7 @@ class Profile(object):
         if not config.has_section(self.name):
             config.add_section(self.name)
         config.set(self.name, 'money', self.money)
-        config.set(self.name, 'body', self.car.chassis)
+        config.set(self.name, 'body', self.car.body)
         config.set(self.name, 'tyres', self.car.tyres)
         config.set(self.name, 'engine', self.car.engine)
         
@@ -44,7 +44,7 @@ def load(name):
     body = config.get(name, 'body')
     engine = config.get(name, 'engine')
     tyres = config.get(name, 'tyres')
-    car = PlayerCar(chassis=body, engine=engine, tyres=tyres)
+    car = PlayerCar(body=body, engine=engine, tyres=tyres)
     return Profile(name, car, money)
 
 

@@ -1,5 +1,5 @@
 options = {
-    'chassis': {
+    'body': {
         'fellali': {
             'name': 'Fellali',
             'image': 'chassis.png',
@@ -45,6 +45,6 @@ options = {
     }
 }
 
-chassis = options['chassis']
+body = options['body']
 engine = options['engine']
 tyres = options['tyres']
