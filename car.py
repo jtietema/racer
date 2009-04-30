@@ -60,6 +60,12 @@ class Car(CocosNode):
         self.set_part_dependant_properties()
         
         self.align_tyres()
+        
+        self.track = None
+        
+        # TODO: calculate these properties bases on the children
+        self.width = 100
+        self.height = 100
     
     def reset(self, rotation=0):
         """Resets some properties of the car, such as rotation and speed.
@@ -76,6 +82,8 @@ class Car(CocosNode):
         self.rot_dir = 0
         
         self.stopping = False
+        
+        self.track = None
     
     def set_part_dependant_properties(self):
         """Sets properties that depend on the car's parts. These mainly
@@ -88,9 +96,9 @@ class Car(CocosNode):
         # Braking depends on the friction, as well as the mass of the car.
         self.brake_multiplier = self.friction_multiplier * (10 - self.mass)
         
-    def update(self, dt, friction):
+    def update(self, dt):
         """Update the car's state."""
-        
+        friction = self.track.get_friction_at(self.position)
         self.speed = self.calculate_speed(dt, friction)
         
         rot_factor = min(1, abs(self.speed) / 200)
@@ -262,9 +270,46 @@ class PlayerCar(Car):
     def disable_controls(self):
         self.controls_enabled = False
         
-    def update(self, dt, friction):
+    def update(self, dt):
         if self.controls_enabled:
             self.rot_dir = self.keyboard[key.RIGHT] - self.keyboard[key.LEFT]
             self.accel_dir = self.keyboard[key.UP] - self.keyboard[key.DOWN]
         
-        Car.update(self, dt, friction)
+        Car.update(self, dt)
+
+
+class ComputerCar(Car):
+    def __init__(self, *args, **kwargs):
+        Car.__init__(self, *args, **kwargs)
+    
+    def update(self, dt):
+        rotation_left = (self.rotation - 45) % 360
+        rotation_right = (self.rotation + 45) % 360
+        
+        
+        left_sensor = self.calc_sensor_pos(rotation_left)
+        right_sensor = self.calc_sensor_pos(rotation_right)
+        center_sensor = self.calc_sensor_pos(self.rotation)
+        
+        left_friction = self.track.get_path_at(left_sensor)
+        right_friction = self.track.get_path_at(right_sensor)
+        center_friction = self.track.get_path_at(center_sensor)
+        
+        if (left_friction > right_friction and left_friction > center_friction):
+            self.rot_dir = -1
+        elif (left_friction < right_friction and center_friction < right_friction):
+            self.rot_dir = 1
+        else:
+            self.rot_dir = 0
+        
+        self.accel_dir = 1
+        
+        Car.update(self, dt)
+    
+    def calc_sensor_pos(self, rotation):
+        r = math.radians(rotation)
+        
+        target_x = self.x + math.sin(r) * (self.height/2 +10)
+        target_y = self.y + math.cos(r) * (self.height/2 +10)
+        return (target_x, target_y)
+        

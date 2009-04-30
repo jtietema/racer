@@ -49,6 +49,9 @@ class Race(Scene):
             
             # Reset the car's state.
             car.reset()
+            
+            # Add the track to the car
+            car.track = track
         
         assert num_player_cars == 1
         
@@ -78,8 +81,7 @@ class Race(Scene):
         """Updates all the cars."""
         for car in self.cars:
             # update the car
-            friction = self.track.get_friction_at(car.position)
-            car.update(dt, friction)
+            car.update(dt)
             
             # update checkpoints
             checkpoint = self.track.get_checkpoint_at(car.position)
@@ -103,7 +105,7 @@ class Race(Scene):
             # update laps
             if self.stats[car].checkpoint == self.track.get_checkpoints():
                 self.stats[car].checkpoint = 0
-                if self.stats[car].laps >= self.track.get_laps():                    
+                if self.stats[car].laps >= self.track.get_laps():
                     # Stop the car, disabling any controls in the process.
                     print 'Finished'
                     
