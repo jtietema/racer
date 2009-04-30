@@ -188,13 +188,13 @@ class Race(Scene):
         return results
     
     def show_results(self):
-        if state.cup.has_next_track():
-            self.menu = MenuLayer(ResultsMenu)
-            self.add(self.menu, z=100)
+        self.menu = MenuLayer(ResultsMenu)
+        self.add(self.menu, z=100)
 
-            self.menu.scale = 0
-            self.menu.do(ScaleTo(1, 1))
-        else:
+        self.menu.scale = 0
+        self.menu.do(ScaleTo(1, 1))
+        
+        if not state.cup.has_next_track():
             print state.cup.total_ranking
 
 
@@ -265,12 +265,20 @@ class ResultsMenu(menu.Menu):
     def __init__(self):
         super(ResultsMenu, self).__init__('Results')
 
-        items = []
-
-        items.append(menu.MenuItem('Next race', self.on_next_race))
-        items.append(menu.MenuItem('Back to Main Menu', self.on_back))
+        if state.cup.has_next_track():
+            items = [
+                menu.MenuItem('Next race', self.on_next_race),
+                menu.MenuItem('Back to Main Menu', self.on_back)
+            ]
+        else:
+            items = [
+                menu.MenuItem('Proceed', self.on_proceed)
+            ]
 
         self.create_menu(items, menu.shake(), menu.shake_back())
+    
+    def on_proceed(self):
+        director.pop()
 
     def on_next_race(self):
         race = Race(state.cup.next_track(), [state.profile.car])
