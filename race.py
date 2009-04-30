@@ -58,6 +58,9 @@ class Race(Scene):
             
             # Reset the car's state.
             car.reset()
+            
+            # Add the track to the car
+            car.track = track
         
         assert num_player_cars == 1
         
@@ -87,8 +90,7 @@ class Race(Scene):
         """Updates all the cars."""
         for car in self.cars:
             # update the car
-            friction = self.track.get_friction_at(car.position)
-            car.update(dt, friction)
+            car.update(dt)
             
             # Create a short-named reference.
             stats = self.stats[car]

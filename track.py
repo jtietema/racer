@@ -40,6 +40,10 @@ class Track(cocos.sprite.Sprite):
         pixel = self.overlay[x,self.size[1] - y]
         return pixel[3]
     
+    def get_path_at(self, (x,y)):
+        pixel = self.overlay[x,self.size[1] - y]
+        return pixel[0]
+    
     def get_checkpoint_at(self, (x,y)):
         pixel = self.overlay[x,self.size[1] - y]
         if 10 < pixel[1] < 100:
