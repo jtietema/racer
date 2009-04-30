@@ -25,7 +25,7 @@ class Race(Scene):
         
         self.finished = False
         
-        self.ranking = None
+        self.results = None
         
         self.track_layer = ScrollableLayer()
         self.track_layer.px_width = track.get_size()[0]
@@ -148,12 +148,14 @@ class Race(Scene):
            Also automatically progresses to the results screen."""
         self.finished = True
         
-        self.ranking = self.determine_ranking()
+        self.results = self.calculate_results()
         
-        player_position = self.ranking.index(self.stats[self.player_car]) + 1
+        state.cup.set_results_for_current_track(self.results)
+        
+        player_position = self.results.index(self.stats[self.player_car]) + 1
         if player_position == 1:
             finished_text = 'You won!'
-        elif player_position == len(self.ranking):
+        elif player_position == len(self.results):
             finished_text = 'You became last'
         else:
             finished_text = 'You finished %s' % (util.ordinal(player_position),)
@@ -170,25 +172,28 @@ class Race(Scene):
         label.do(ScaleTo(1, 0.75) + Delay(3) + ScaleTo(0, 0.75)
             + CallFunc(self.remove, label) + CallFunc(self.show_results))
     
-    def determine_ranking(self):
+    def calculate_results(self):
         """Returns a list with all the Stats instances sorted ascendingly
            by total lap time. This method throws an exception if the race
            is not finished yet."""
         if not self.finished:
             raise RaceException("Race not finished yet.")
         
-        ranking = []
+        results = []
         for stats in self.stats.values():
-            bisect.insort(ranking, stats)
+            bisect.insort(results, stats)
         
-        return ranking
+        return results
     
     def show_results(self):
-        self.menu = MenuLayer(ResultsMenu)
-        self.add(self.menu, z=100)
-        
-        self.menu.scale = 0
-        self.menu.do(ScaleTo(1, 1))
+        if state.cup.has_next_track():
+            self.menu = MenuLayer(ResultsMenu)
+            self.add(self.menu, z=100)
+
+            self.menu.scale = 0
+            self.menu.do(ScaleTo(1, 1))
+        else:
+            print state.cup.total_ranking
 
 
 class Stats():
@@ -260,9 +265,7 @@ class ResultsMenu(menu.Menu):
 
         items = []
 
-        if state.cup.has_next_track():
-            items.append(menu.MenuItem('Next race', self.on_next_race))
-
+        items.append(menu.MenuItem('Next race', self.on_next_race))
         items.append(menu.MenuItem('Back to Main Menu', self.on_back))
 
         self.create_menu(items, menu.shake(), menu.shake_back())

@@ -23,6 +23,7 @@ class Cup(object):
         self.track_names = filter(None, [s.strip() for s in self.track_names])
         self.current_index = 0
         self.name = name
+        self.results = {}
     
     def has_next_track(self):
         """Returns true if the cup has more tracks, false otherwise."""
@@ -35,7 +36,25 @@ class Cup(object):
             track_name = self.track_names[self.current_index]
             self.current_index += 1
             return Track(self.name, track_name)
-        return None 
+        return None
+    
+    def set_results_for_current_track(self, results):
+        self.results[self.current_index] = results
+    
+    def _get_total_ranking(self):
+        """Calculates the total ranking of the cup based on the results
+           that have thus far been added."""
+        ranking = {}
+        for results in self.results.values():
+            for pos, stats in enumerate(results):
+                ranking[stats.car] = ranking.get(stats.car, 0) + (pos * stats.total_time)
+                
+        ranking = dict([(v, k) for (k, v) in ranking.iteritems()])
+        scores = ranking.keys()
+        scores.sort()
+                
+        return [ranking[score] for score in scores]
+    total_ranking = property(_get_total_ranking)
 
 
 def is_valid_cup(name):
