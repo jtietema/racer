@@ -20,10 +20,13 @@ class Track(cocos.sprite.Sprite):
         self.size = (width, height)
         self.position = (width / 2, height / 2)
         
-        # set starting point
-        sx = cp.getint(track, 'startx')
-        sy = cp.getint(track, 'starty')
-        self.start = sx, sy
+        # set starting grid
+        self.start = []
+        for i in range(1, 9):
+            sx = cp.getint(track, 'start' + str(i) + 'x')
+            sy = cp.getint(track, 'start' + str(i) + 'y')
+            sr = cp.getint(track, 'start' + str(i) + 'r')
+            self.start.append(((sx, sy), sr))
         
         # get track overlay
         overlay_file = cp.get(track, 'overlay_image')
@@ -68,4 +71,5 @@ class Track(cocos.sprite.Sprite):
     
     def get_laps(self):
         return self.laps
+    
     

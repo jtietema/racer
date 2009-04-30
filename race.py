@@ -42,12 +42,24 @@ class Race(Scene):
         
         num_player_cars = 0
         self.stats = {}
+        
+        # define start grid
+        i = 0
+        grid = track.get_start()
         for car in self.cars:
             # Add the car to the cars layer.
             self.cars_layer.add(car)
             
+            # Reset the car's state.
+            car.reset()
+            
             # Set the car's position.
-            car.position = track.get_start()
+            car.position = grid[i][0]
+            car.rotation = grid[i][1]
+            i += 1
+            
+            # Add the track to the car
+            car.track = track
             
             if isinstance(car, PlayerCar):
                 num_player_cars += 1
@@ -55,12 +67,6 @@ class Race(Scene):
                 self.player_car = car
             
             self.stats[car] = Stats(car)
-            
-            # Reset the car's state.
-            car.reset()
-            
-            # Add the track to the car
-            car.track = track
         
         assert num_player_cars == 1
         
