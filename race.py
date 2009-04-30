@@ -5,8 +5,8 @@ from cocos.layer import ColorLayer, Layer
 from cocos.director import director
 from pyglet.window import key
 import pyglet.clock
-from cocos.actions.instant_actions import Hide
-from cocos.actions.interval_actions import ScaleTo
+from cocos.actions.instant_actions import CallFunc
+from cocos.actions.interval_actions import ScaleTo, Delay
 
 from game_state import state
 from car import PlayerCar
@@ -64,8 +64,8 @@ class Race(Scene):
         director.window.push_handlers(self.on_key_press)
     
     def on_key_press(self, symbol, modifier):
-        if symbol == key.ESCAPE:
-            self.menu = MenuLayer()
+        if not self.finished and symbol == key.ESCAPE:
+            self.menu = MenuLayer(InGameMenu)
             self.add(self.menu, z=100)
             return True
     
@@ -117,15 +117,16 @@ class Race(Scene):
             if isinstance(car, PlayerCar) and not self.finished:
                 if finished:
                     # The race is over since the player car finished.
-                    self.finished = True
-                    self.show_finished_message()
-                    pyglet.clock.schedule_once(self.progress_to_results, 3)
+                    self.finish()
                 else:
                     self.hud.update_laps(self.stats[car].laps)
                     self.scroller.set_focus(*car.position)
     
-    def show_finished_message(self):
-        """Displays a message explaining the player that he finished."""
+    def finish(self):
+        """Displays a message explaining the player that he finished.
+           Also automatically progresses to the results screen."""
+        self.finished = True
+        
         label = util.Label(text='You finished!', anchor_y='bottom', font_size=40,
             background=(0, 0, 0, 125))
         
@@ -135,12 +136,24 @@ class Race(Scene):
         self.add(label, z=100)
         
         label.scale = 0
-        label.do(ScaleTo(1, 0.75))
+        label.do(ScaleTo(1, 0.75) + Delay(3) + ScaleTo(0, 0.75)
+            + CallFunc(self.remove, label) + CallFunc(self.show_results))
     
-    def progress_to_results(self, dt):
-        from results import Results
+    def show_results(self):
+        self.menu = MenuLayer(ResultsMenu)
+        self.add(self.menu, z=100)
         
-        director.replace(Results())
+        self.menu.scale = 0
+        self.menu.do(ScaleTo(1, 0.75))
+
+
+class Stats():
+    def __init__(self):
+        self.laps = 1
+        self.checkpoint = -1
+        self.pre_checkpoint = False
+        self.in_checkpoint = False
+
 
 class HUD(Layer):
     def __init__(self, lap_count):
@@ -163,11 +176,11 @@ class HUD(Layer):
 
 
 class MenuLayer(Layer):
-    def __init__(self):
+    def __init__(self, klass):
         Layer.__init__(self)
         
         self.add(ColorLayer(0, 0, 0, 100), z=0)
-        self.add(InGameMenu(), z=1)
+        self.add(klass(), z=1)
 
 
 class InGameMenu(menu.Menu):
@@ -187,9 +200,23 @@ class InGameMenu(menu.Menu):
     def on_quit(self):
         self.on_resume()
 
-class Stats():
+
+class ResultsMenu(menu.Menu):
     def __init__(self):
-        self.laps = 1
-        self.checkpoint = -1
-        self.pre_checkpoint = False
-        self.in_checkpoint = False
+        super(ResultsMenu, self).__init__('Results')
+
+        items = []
+
+        if state.cup.has_next_track():
+            items.append(menu.MenuItem('Next race', self.on_next_race))
+
+        items.append(menu.MenuItem('Back to Main Menu', self.on_back))
+
+        self.create_menu(items, menu.shake(), menu.shake_back())
+
+    def on_next_race(self):
+        race = Race(state.cup.next_track(), [state.profile.car])
+        director.replace(race)
+
+    def on_back(self):
+        director.pop()
