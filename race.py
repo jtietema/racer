@@ -23,9 +23,9 @@ class Race(Scene):
     def __init__(self, track, cars):
         Scene.__init__(self)
         
-        self.finished = False
+        self.player_finished = False
         
-        self.results = None
+        self.results = []
         
         self.track_layer = ScrollableLayer()
         self.track_layer.px_width = track.get_size()[0]
@@ -76,7 +76,7 @@ class Race(Scene):
         director.window.push_handlers(self.on_key_press)
     
     def on_key_press(self, symbol, modifier):
-        if not self.finished and symbol == key.ESCAPE:
+        if not self.player_finished and symbol == key.ESCAPE:
             self.menu = MenuLayer(InGameMenu)
             self.add(self.menu, z=100)
             return True
@@ -103,19 +103,16 @@ class Race(Scene):
             elif checkpoint == 2 and stats.pre_checkpoint and stats.in_checkpoint:
                 stats.pre_checkpoint = False
                 stats.checkpoint += 1
-                print 'Checkpoint', stats.checkpoint
+                print car, 'Checkpoint', stats.checkpoint
             elif checkpoint == 2 and not stats.pre_checkpoint and not stats.in_checkpoint:
                 stats.in_checkpoint = True
                 stats.checkpoint -= 1
-                print 'Checkpoint', stats.checkpoint
+                print car, 'Checkpoint', stats.checkpoint
             elif checkpoint == 0:
                 stats.in_checkpoint = False
                 stats.pre_checkpoint = False
             
-            finished = False
-            
-            if stats.checkpoint >= 0:
-                stats.current_lap_time += dt
+            stats.current_lap_time += dt
             
             # update laps
             if stats.checkpoint == self.track.get_checkpoints():
@@ -128,37 +125,57 @@ class Race(Scene):
                 
                 if stats.laps >= self.track.get_laps():                    
                     # Stop the car, disabling any controls in the process.
-                    print 'Finished'
+                    print car, 'Finished'
                     
                     car.stop()
                     
-                    finished = True
+                    stats.finished = True
+                    self.add_result(stats)
                 else:
                     stats.laps += 1
-                    print 'Laps ', stats.laps
+                    print car, 'Laps ', stats.laps
                     
-            if isinstance(car, PlayerCar) and not self.finished:
-                if finished:
+            if isinstance(car, PlayerCar) and not self.player_finished:
+                if stats.finished:
                     # The race is over since the player car finished.
                     self.finish()
                 else:
                     self.hud.update_laps(stats.laps)
                     self.scroller.set_focus(*car.position)
     
+    def add_result(self, stats):
+        """Returns a list with all the Stats instances sorted ascendingly
+           by total lap time."""
+        assert stats not in self.results
+
+        self.results.append(stats)
+
+        print 'RESULTS', self.results
+
+    def autocomplete_results(self):
+        """Automatically fills in a custom time for all cars that did not
+           finish yet."""
+        for stats in self.stats.values():
+            if not stats.finished:
+                assert stats not in self.results
+
+                stats.total_time = self.results[-1].total_time + 30
+                self.results.append(stats)
+
+        print 'RESULTS', self.results
+    
     def finish(self):
         """Displays a message explaining the player that he finished.
            Also automatically progresses to the results screen."""
-        self.finished = True
+        self.player_finished = True
         
-        self.results = self.calculate_results()
-        
-        state.cup.set_results_for_current_track(self.results)
+        # state.cup.set_results_for_current_track(self.results)
         
         player_position = self.results.index(self.stats[self.player_car]) + 1
         if player_position == 1:
             finished_text = 'You won!'
         elif player_position == len(self.results):
-            finished_text = 'You became last'
+            finished_text = 'You finished last'
         else:
             finished_text = 'You finished %s' % (util.ordinal(player_position),)
         
@@ -174,28 +191,19 @@ class Race(Scene):
         label.do(ScaleTo(1, 0.75) + Delay(3) + ScaleTo(0, 0.75)
             + CallFunc(self.remove, label) + CallFunc(self.show_results))
     
-    def calculate_results(self):
-        """Returns a list with all the Stats instances sorted ascendingly
-           by total lap time. This method throws an exception if the race
-           is not finished yet."""
-        if not self.finished:
-            raise RaceException("Race not finished yet.")
-        
-        results = []
-        for stats in self.stats.values():
-            bisect.insort(results, stats)
-        
-        return results
-    
     def show_results(self):
         self.menu = MenuLayer(ResultsMenu)
         self.add(self.menu, z=100)
 
         self.menu.scale = 0
         self.menu.do(ScaleTo(1, 1))
+    
+    def save_results(self):
+        """Autocompletes this race's results and stores them on the cup
+           object."""
+        self.autocomplete_results()
         
-        if not state.cup.has_next_track():
-            print state.cup.total_ranking
+        state.cup.set_results_for_current_track(self.results)
 
 
 class Stats():
@@ -207,9 +215,10 @@ class Stats():
         self.checkpoint = -1
         self.pre_checkpoint = False
         self.in_checkpoint = False
+        self.finished = False
     
     def __cmp__(self, other):
-        return self.total_time > other.total_time
+        return cmp(self.total_time, other.total_time)
     
     total_time = property(lambda self: sum(self.lap_times),
         doc="Returns the sum of all the lap times.")
@@ -278,13 +287,17 @@ class ResultsMenu(menu.Menu):
         self.create_menu(items, menu.shake(), menu.shake_back())
     
     def on_proceed(self):
+        self.get_ancestor(Race).save_results()
+        print state.cup.total_ranking
         director.pop()
 
     def on_next_race(self):
+        self.get_ancestor(Race).save_results()
         race = Race(state.cup.next_track(), [state.profile.car])
         director.replace(race)
 
     def on_back(self):
+        state.cup = None
         director.pop()
     
     def on_quit(self):
