@@ -1,9 +1,9 @@
 import os
-from glob import glob
 
 import cocos
 
 from track import Track
+import util
 
 
 __all__ = ['list', 'load']
@@ -49,7 +49,10 @@ class Cup(object):
             for pos, stats in enumerate(results):
                 ranking[stats.car] = ranking.get(stats.car, 0) + (pos * stats.total_time)
                 
-        ranking = dict([(v, k) for (k, v) in ranking.iteritems()])
+        # Swap keys and values
+        ranking = util.flip_dict(ranking)
+        
+        # Sort the keys.
         scores = ranking.keys()
         scores.sort()
                 

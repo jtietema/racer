@@ -283,26 +283,27 @@ class ComputerCar(Car):
         Car.__init__(self, *args, **kwargs)
     
     def update(self, dt):
-        rotation_left = (self.rotation - 45) % 360
-        rotation_right = (self.rotation + 45) % 360
+        if not self.stopping:
+            rotation_left = (self.rotation - 45) % 360
+            rotation_right = (self.rotation + 45) % 360
         
         
-        left_sensor = self.calc_sensor_pos(rotation_left)
-        right_sensor = self.calc_sensor_pos(rotation_right)
-        center_sensor = self.calc_sensor_pos(self.rotation)
+            left_sensor = self.calc_sensor_pos(rotation_left)
+            right_sensor = self.calc_sensor_pos(rotation_right)
+            center_sensor = self.calc_sensor_pos(self.rotation)
         
-        left_friction = self.track.get_path_at(left_sensor)
-        right_friction = self.track.get_path_at(right_sensor)
-        center_friction = self.track.get_path_at(center_sensor)
+            left_friction = self.track.get_path_at(left_sensor)
+            right_friction = self.track.get_path_at(right_sensor)
+            center_friction = self.track.get_path_at(center_sensor)
         
-        if (left_friction > right_friction and left_friction > center_friction):
-            self.rot_dir = -1
-        elif (left_friction < right_friction and center_friction < right_friction):
-            self.rot_dir = 1
-        else:
-            self.rot_dir = 0
+            if (left_friction > right_friction and left_friction > center_friction):
+                self.rot_dir = -1
+            elif (left_friction < right_friction and center_friction < right_friction):
+                self.rot_dir = 1
+            else:
+                self.rot_dir = 0
         
-        self.accel_dir = 1
+            self.accel_dir = 1
         
         Car.update(self, dt)
     

@@ -49,3 +49,8 @@ def signum(number):
 def ordinal(n):
     """Converts a number into an ordinal numbers"""
     return str(n) + {1 : 'st', 2 : 'nd', 3 : 'rd'}.get(n % 10, 'th')
+
+
+def flip_dict(d):
+    """Flips the keys and the values of a dictionary."""
+    return dict([(v, k) for (k, v) in d.iteritems()])
