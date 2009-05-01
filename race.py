@@ -12,6 +12,7 @@ from cocos.actions.interval_actions import ScaleTo, Delay
 
 from game_state import state
 from car import PlayerCar
+from podium import Podium
 import util
 
 
@@ -294,8 +295,7 @@ class ResultsMenu(menu.Menu):
     
     def on_proceed(self):
         self.get_ancestor(Race).save_results()
-        print state.cup.total_ranking
-        director.pop()
+        director.replace(Podium())
 
     def on_next_race(self):
         self.get_ancestor(Race).save_results()

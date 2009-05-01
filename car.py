@@ -2,6 +2,7 @@
 
 import math
 import os
+from random import randint
 
 from cocos.cocosnode import CocosNode
 from cocos.sprite import Sprite
@@ -13,6 +14,7 @@ from cocos.euclid import Point2
 
 import parts
 from util import signum
+from game_state import state
 
 # Convenience constants.
 FORWARD = RIGHT = 1
@@ -39,6 +41,13 @@ FRICTIONS = {
 TYRE_NAMES = ['tyre_tl','tyre_tr','tyre_bl','tyre_br']
 
 MAX_TYRE_ROTATION = 30
+
+COMPUTER_NAMES = [
+    'Brutus',
+    'Rufus',
+    'Gunther',
+    'Grossini'
+]
 
 
 class Car(CocosNode):
@@ -265,7 +274,7 @@ class Car(CocosNode):
 
 
 class PlayerCar(Car):
-    def __init__(self, *args, **kwargs):        
+    def __init__(self, *args, **kwargs):
         self.keyboard = key.KeyStateHandler()
         director.window.push_handlers(self.keyboard)
         
@@ -285,11 +294,16 @@ class PlayerCar(Car):
             self.accel_dir = self.keyboard[key.UP] - self.keyboard[key.DOWN]
         
         Car.update(self, dt)
+    
+    name = property(lambda self: state.profile.name)
 
 
 class ComputerCar(Car):
     def __init__(self, *args, **kwargs):
         Car.__init__(self, *args, **kwargs)
+        
+        # TODO: prevent a name to be taken twice.
+        self.name = COMPUTER_NAMES[randint(0, len(COMPUTER_NAMES) - 1)]
     
     def update(self, dt):
         if not self.stopping:
