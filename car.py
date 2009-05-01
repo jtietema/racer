@@ -3,6 +3,7 @@
 import math
 import os
 
+from cocos.draw import Line
 from cocos.cocosnode import CocosNode
 from cocos.sprite import Sprite
 from cocos.director import director
@@ -11,6 +12,7 @@ import pyglet.resource
 
 import parts
 from util import signum
+import util
 
 # Convenience constants.
 FORWARD = RIGHT = 1
@@ -50,6 +52,10 @@ class Car(CocosNode):
         
         self.reset()
         
+        # defaults
+        self.width = 100
+        self.height = 100
+        
         # Set the car's parts.
         for group in parts.options.keys():
             # We use the special add-methods because we don't want to set
@@ -62,10 +68,6 @@ class Car(CocosNode):
         self.align_tyres()
         
         self.track = None
-        
-        # TODO: calculate these properties bases on the children
-        self.width = 100
-        self.height = 100
     
     def reset(self, rotation=0):
         """Resets some properties of the car, such as rotation and speed.
@@ -95,6 +97,11 @@ class Car(CocosNode):
         
         # Braking depends on the friction, as well as the mass of the car.
         self.brake_multiplier = self.friction_multiplier * (10 - self.mass)
+        
+        # recalculate the size
+        body = self.get('body')
+        self.width = body.width
+        self.height = body.height
         
     def update(self, dt):
         """Update the car's state."""
@@ -253,7 +260,40 @@ class Car(CocosNode):
             self.remove(obj)
         except Exception:
             pass
-
+    
+    def get_polygon(self):
+#        float cosa = (float)Math.cos((double)ang), sina = (float)Math.sin((double)ang);
+#  
+#  Vector2D A = new Vector2D(S.x * cosa - S.y * sina, S.x * sina + S.y * cosa);
+#  Vector2D B = new Vector2D(-S.x * cosa - S.y * sina, -S.x * sina + S.y * cosa);
+        # center point
+        C = util.Vector(self.x, self.y)
+        
+        rad = math.radians(self.rotation)
+        
+        cosa = math.cos(rad)
+        sina = math.sin(rad)
+        
+        h = self.height * self.scale / 2
+        w = self.width * self.scale / 2
+        
+        # offset
+        A = util.Vector(w * cosa - h * sina, w * sina + h * cosa) 
+        # y offset
+        B = util.Vector(-w * cosa - h * sina, -w * sina + h * cosa)
+        
+#  polygon.moveTo(C.x + A.x, C.y + A.y);
+#  polygon.lineTo(C.x + B.x, C.y + B.y);
+#  polygon.lineTo(C.x - A.x, C.y - A.y);
+#  polygon.lineTo(C.x - B.x, C.y - B.y);
+        
+        upper_left  = util.Vector(C.x + A.x, C.y + A.y)
+        upper_right = util.Vector(C.x + B.x, C.y + B.y)
+        lower_right = util.Vector(C.x - A.x, C.y - A.y)
+        lower_left  = util.Vector(C.x - B.x, C.y - B.y)
+        
+        return util.Polygon([upper_left, upper_right, lower_right, lower_left])
+    
 
 class PlayerCar(Car):
     def __init__(self, *args, **kwargs):        
