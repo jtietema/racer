@@ -179,6 +179,47 @@ class Race(Scene):
                 else:
                     self.hud.update_laps(stats.laps)
                     self.scroller.set_focus(*car.position)
+        
+        # do collision detection
+        
+        # make a copy of cars list to prevent duplicate collision checks
+        cars = self.cars[:]
+        # iterate over all cars
+        for car in self.cars:
+            # remove car from the te list to prevent detecting collision with self
+            cars.remove(car)
+            # iterate over remaining cars
+            for othercar in cars:
+                polygon = car.get_polygon()
+                other_polygon = othercar.get_polygon()
+                if polygon.intersects(other_polygon):
+                    self.resolve_collision(car, othercar)
+                    
+    def resolve_collision(self, car1, car2):
+        diff_x = abs(car1.x - car2.x)
+        diff_y = abs(car1.y - car2.y)
+        collision = True
+        while collision:
+            if diff_y > diff_x:
+                # resolve collision in y axis
+                if car1.y > car2.y:
+                    car1.y += 1
+                    car2.y -= 1
+                else:
+                    car1.y -= 1
+                    car2.y += 1
+            else:
+                # resolve collision in x axis
+                if car1.x > car2.x:
+                    car1.x += 1
+                    car2.x -= 1
+                else:
+                    car1.x -= 1
+                    car2.x += 1
+            
+            poly1 = car1.get_polygon()
+            poly2 = car2.get_polygon()
+            collision = poly1.intersects(poly2)
     
     def add_result(self, stats):
         """Returns a list with all the Stats instances sorted ascendingly
@@ -330,7 +371,6 @@ class TrafficLights(CocosNode):
         for i in range(-2, TrafficLights.NUM_LIGHTS / 2):
             overlay = ColorLayer(0, 0, 0, 125, width, height)
             overlay.x = (i * width) / 2
-            print overlay.position
             self.add(overlay, z=2)
             self.overlays.append(overlay)
     
