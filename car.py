@@ -8,6 +8,8 @@ from cocos.sprite import Sprite
 from cocos.director import director
 from pyglet.window import key
 import pyglet.resource
+from cocos.particle import ParticleSystem, Color
+from cocos.euclid import Point2
 
 import parts
 from util import signum
@@ -63,6 +65,9 @@ class Car(CocosNode):
         
         self.track = None
         
+        self.dirt = Dirt()
+        self.add(self.dirt)
+        
         # TODO: calculate these properties bases on the children
         self.width = 100
         self.height = 100
@@ -107,6 +112,10 @@ class Car(CocosNode):
         tyre_rotation = MAX_TYRE_ROTATION * self.rot_dir
         for tyre in self.top_tyres:
             tyre.rotation = tyre_rotation
+        
+        # Change dirt properties.
+        self.dirt.speed = self.speed
+        
         
         r = math.radians(self.rotation)
         s = dt * self.speed
@@ -314,3 +323,52 @@ class ComputerCar(Car):
         target_y = self.y + math.cos(r) * (self.height/2 +10)
         return (target_x, target_y)
         
+
+class Dirt(ParticleSystem):
+    # total particles
+    total_particles = 75
+
+    # duration
+    duration = -1
+
+    # gravity
+    gravity = Point2(0,0)
+
+    # angle
+    angle = -90
+    angle_var = 20
+
+    # radial
+    radial_accel = 200
+    radial_accel_var = 0
+
+    # speed of particles
+    speed = 800
+    speed_var = 50
+
+    # emitter variable position
+    pos_var = Point2(0,0)
+
+    # life of particles
+    life = 0.3
+    life_var = 0.1
+
+    # emits per frame
+    emission_rate = total_particles / life
+
+    # color of particles
+    start_color = Color(0.5,0.5,0.5,1.0)
+    start_color_var = Color(0.5, 0.5, 0.5, 1.0)
+    end_color = Color(0.1,0.1,0.1,0.2)
+    end_color_var = Color(0.1,0.1,0.1,0.2)
+
+    # size, in pixels
+    size = 10.0
+    size_var = 2.0
+
+    # blend additive
+    blend_additive = False
+
+    # color modulate
+    color_modulate = True
+    

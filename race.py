@@ -180,7 +180,7 @@ class Race(Scene):
         player_position = self.results.index(self.stats[self.player_car]) + 1
         if player_position == 1:
             finished_text = 'You won!'
-        elif player_position == len(self.results):
+        elif player_position == len(self.stats):
             finished_text = 'You finished last'
         else:
             finished_text = 'You finished %s' % (util.ordinal(player_position),)
