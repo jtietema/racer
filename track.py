@@ -4,6 +4,10 @@ from PIL import Image
 
 import cocos
 
+
+CHECKPOINT_STAGE_TYPES = 3
+
+
 class Track(cocos.sprite.Sprite):
     def __init__(self, cup, track):
         # load the tracks config file
@@ -51,7 +55,7 @@ class Track(cocos.sprite.Sprite):
             return pixel[0]
         return 0
     
-    def get_checkpoint_at(self, (x,y)):
+    def get_checkpoint_stage_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:
             pixel = self.overlay[x,self.size[1] - y]
             if 10 < pixel[1] < 100:

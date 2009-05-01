@@ -114,8 +114,7 @@ class Race(Scene):
         
         lights.do(
             AccelDeccel(MoveTo((lights.x, target_y), 2))
-            + Delay(1)
-            + ((Delay(1) + CallFunc(lights.shift_overlay)) * TrafficLights.NUM_LIGHTS)
+            + (Delay(1) + CallFunc(lights.shift_overlay)) * TrafficLights.NUM_LIGHTS
             + CallFunc(self.start)
             + Delay(1.5)
             + MoveTo((lights.x, origin_y), 0.3)
@@ -132,28 +131,30 @@ class Race(Scene):
             stats = self.stats[car]
             
             # update checkpoints
-            checkpoint = self.track.get_checkpoint_at(car.position)
-            if checkpoint == 1 and not stats.in_checkpoint:
-                stats.pre_checkpoint = True
-                stats.in_checkpoint = True
-            elif checkpoint == 2 and stats.pre_checkpoint and stats.in_checkpoint:
-                stats.pre_checkpoint = False
-                stats.checkpoint += 1
-                print car, 'Checkpoint', stats.checkpoint
-            elif checkpoint == 2 and not stats.pre_checkpoint and not stats.in_checkpoint:
-                stats.in_checkpoint = True
-                stats.checkpoint -= 1
-                print car, 'Checkpoint', stats.checkpoint
-            elif checkpoint == 0:
-                stats.in_checkpoint = False
-                stats.pre_checkpoint = False
+            checkpoint_stage = self.track.get_checkpoint_stage_at(car.position)
+            next_checkpoint_stage = (stats.last_checkpoint_stage + 1) % 3
+            
+            if checkpoint_stage == next_checkpoint_stage:
+                # Car changed checkpoint stage and is driving in the right
+                # direction.
+                if checkpoint_stage == 2:
+                    stats.checkpoints += 1
+                    print car, 'Checkpoint', stats.checkpoints
+            elif checkpoint_stage <> stats.last_checkpoint_stage and stats.last_checkpoint_stage > -1:
+                # Car changed checkpoint stage and is driving the wrong way.
+                print car, 'WRONG WAY!', stats.last_checkpoint_stage, checkpoint_stage
+                if checkpoint_stage == 1:
+                    stats.checkpoints -= 1
+                    print car, 'Checkpoint', stats.checkpoints
+            
+            stats.last_checkpoint_stage = checkpoint_stage
             
             stats.current_lap_time += dt
             
             # update laps
-            if stats.checkpoint == self.track.get_checkpoints():
+            if stats.checkpoints == self.track.get_checkpoints():
                 # At finish.
-                stats.checkpoint = 0
+                stats.checkpoints = 0
                 
                 # Store the lap time and reset the current lap time.
                 stats.lap_times.append(stats.current_lap_time)
@@ -196,6 +197,7 @@ class Race(Scene):
                 assert stats not in self.results
 
                 stats.total_time = self.results[-1].total_time + 30
+                stats.finished = True
                 self.results.append(stats)
 
         print 'RESULTS', self.results
@@ -255,12 +257,25 @@ class Race(Scene):
 class Stats():
     def __init__(self, car):
         self.car = car
+        
+        # Timer for the current lap.
         self.current_lap_time = 0
+        
+        # A list of lap times.
         self.lap_times = []
+        
+        # The lap the car is currently in.
         self.laps = 1
-        self.checkpoint = -1
-        self.pre_checkpoint = False
-        self.in_checkpoint = False
+        
+        # The last checkpoint stage the car was in.
+        self.last_checkpoint_stage = -1
+        
+        # The number of check points passed since the finish. Set to -1
+        # initially to compensate for a starting grid before the finish
+        # line.
+        self.checkpoints = -1
+        
+        # Reflects if this car finished the race.
         self.finished = False
     
     def __cmp__(self, other):
