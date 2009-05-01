@@ -59,8 +59,6 @@ class Car(CocosNode):
     def __init__(self, **kwargs):
         CocosNode.__init__(self)
         
-        self.reset()
-        
         # Set the car's parts.
         for group in parts.options.keys():
             # We use the special add-methods because we don't want to set
@@ -72,10 +70,10 @@ class Car(CocosNode):
         
         self.align_tyres()
         
-        self.track = None
-        
         self.dirt = Dirt()
         self.add(self.dirt)
+        
+        self.reset()
         
         # TODO: calculate these properties bases on the children
         self.width = 100
@@ -98,6 +96,8 @@ class Car(CocosNode):
         self.stopping = False
         
         self.track = None
+        
+        self.dirt.speed = 0
     
     def set_part_dependant_properties(self):
         """Sets properties that depend on the car's parts. These mainly

@@ -1,14 +1,16 @@
 import bisect
 
+from cocos.cocosnode import CocosNode
 from cocos.scene import Scene
 from cocos.tiles import ScrollableLayer, ScrollingManager
 from cocos import menu
 from cocos.layer import ColorLayer, Layer
 from cocos.director import director
+from cocos.sprite import Sprite
 from pyglet.window import key
 import pyglet.clock
 from cocos.actions.instant_actions import CallFunc
-from cocos.actions.interval_actions import ScaleTo, Delay
+from cocos.actions.interval_actions import ScaleTo, Delay, MoveTo, AccelDeccel
 
 from game_state import state
 from car import PlayerCar
@@ -23,6 +25,9 @@ class RaceException(Exception):
 class Race(Scene):
     def __init__(self, track, cars):
         Scene.__init__(self)
+        
+        # This is set to true once countdown is complete.
+        self.started = False
         
         self.player_finished = False
         
@@ -76,11 +81,12 @@ class Race(Scene):
         self.add(self.scroller, z=0)
         self.add(self.hud, z=1)
         
-        self.schedule(self.update)
-        
         self.menu = None
         
-        director.window.push_handlers(self.on_key_press)
+        self.add_traffic_lights()
+        
+        self.scroller.is_event_handler = True
+        self.scroller.on_key_press = self.on_key_press
     
     def on_key_press(self, symbol, modifier):
         if not self.player_finished and symbol == key.ESCAPE:
@@ -93,8 +99,31 @@ class Race(Scene):
             self.remove(self.menu)
             self.menu = None
         
+    def add_traffic_lights(self):
+        lights = TrafficLights()
+        
+        lights.image_anchor_y = 0
+        lights.x = director.window.width / 2
+        
+        origin_y = director.window.height
+        target_y = director.window.height - lights.image.height
+        
+        lights.y = origin_y
+        
+        self.add(lights, name='traffic_lights', z=100)
+        
+        lights.do(
+            AccelDeccel(MoveTo((lights.x, target_y), 2))
+            + Delay(1)
+            + ((Delay(1) + CallFunc(lights.shift_overlay)) * TrafficLights.NUM_LIGHTS)
+            + CallFunc(self.start)
+            + Delay(1.5)
+            + MoveTo((lights.x, origin_y), 0.3)
+            + CallFunc(self.remove, lights)
+        )
+        
     def update(self, dt):
-        """Updates all the cars."""
+        """Updates all the cars once the race has started."""
         for car in self.cars:
             # update the car
             car.update(dt)
@@ -171,6 +200,11 @@ class Race(Scene):
 
         print 'RESULTS', self.results
     
+    def start(self):
+        self.started = True
+        
+        self.schedule(self.update)
+    
     def finish(self):
         """Displays a message explaining the player that he finished.
            Also automatically progresses to the results screen."""
@@ -195,8 +229,13 @@ class Race(Scene):
         self.add(label, z=100)
         
         label.scale = 0
-        label.do(ScaleTo(1, 0.75) + Delay(3) + ScaleTo(0, 0.75)
-            + CallFunc(self.remove, label) + CallFunc(self.show_results))
+        label.do(
+            ScaleTo(1, 0.75)
+            + Delay(3)
+            + ScaleTo(0, 0.75)
+            + CallFunc(self.remove, label)
+            + CallFunc(self.show_results)
+        )
     
     def show_results(self):
         self.menu = MenuLayer(ResultsMenu)
@@ -250,6 +289,41 @@ class HUD(Layer):
     def update_laps(self, num_laps):
         self.laps_label.text = self.get_laps_text(num_laps)
 
+
+class TrafficLights(CocosNode):
+    NUM_LIGHTS = 4
+    
+    image = property(lambda self: self.image_sprite.image)
+    
+    def __init__(self):
+        super(TrafficLights, self).__init__()
+        
+        self.image_sprite = Sprite('traffic_lights.png')
+        self.image_sprite.image_anchor_y = 0
+        self.add(self.image_sprite, z=1)
+        
+        self.draw_overlays()
+    
+    def draw_overlays(self):
+        """Draws black, semi-transparent overlays over the lights to simulate
+           a light that is turned off."""
+        self.overlays = []
+        
+        width = self.image.width / TrafficLights.NUM_LIGHTS
+        height = self.image.height
+        
+        for i in range(-2, TrafficLights.NUM_LIGHTS / 2):
+            overlay = ColorLayer(0, 0, 0, 125, width, height)
+            overlay.x = (i * width) / 2
+            print overlay.position
+            self.add(overlay, z=2)
+            self.overlays.append(overlay)
+    
+    def shift_overlay(self):
+        """Removes one overlay, making the next light from the left light up.
+           Raises an exception if all overlays have already been removed."""
+        self.remove(self.overlays.pop(0))
+        
 
 class MenuLayer(Layer):
     def __init__(self, klass):
