@@ -1,4 +1,4 @@
-# TODO: improve
+# TODO: improve visually
 
 import sys
 
