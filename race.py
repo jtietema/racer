@@ -15,7 +15,7 @@ from cocos.actions.interval_actions import ScaleTo, Delay, MoveTo, AccelDeccel
 import pyglet.media
 
 from game_state import state
-from car import PlayerCar
+from car import PlayerCar, ComputerCar
 from podium import Podium
 import util
 
@@ -454,7 +454,7 @@ class ResultsMenu(menu.Menu):
 
     def on_next_race(self):
         self.get_ancestor(Race).save_results()
-        race = Race(state.cup.next_track(), [state.profile.car])
+        race = Race(state.cup.next_track(), [state.profile.car, ComputerCar.get_default(), ComputerCar.get_default(), ComputerCar.get_default()])
         director.replace(race)
 
     def on_back(self):
