@@ -46,7 +46,7 @@ class Track(cocos.sprite.Sprite):
     def get_friction_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:
             pixel = self.overlay[x,self.size[1] - y]
-            return pixel[3]
+            return pixel[2]
         return 25
     
     def get_path_at(self, (x,y)):
