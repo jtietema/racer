@@ -62,19 +62,19 @@ class Track(cocos.sprite.Sprite):
     
     def get_friction_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:
-            pixel = self.overlay[x,self.size[1] - y]
+            pixel = self.overlay[x/4,(self.size[1] - y) / 4]
             return pixel[2]
         return 25
     
     def get_path_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:
-            pixel = self.overlay[x,self.size[1] - y]
+            pixel = self.overlay[x/4,(self.size[1] - y) / 4]
             return pixel[0]
         return 0
     
     def get_checkpoint_stage_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:
-            pixel = self.overlay[x,self.size[1] - y]
+            pixel = self.overlay[x/4,(self.size[1] - y) / 4]
             if 10 < pixel[1] < 100:
                 return 1
             elif pixel[1] > 125:

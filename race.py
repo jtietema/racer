@@ -1,7 +1,6 @@
 import bisect
 import os
 
-import pygame.mixer
 from cocos.cocosnode import CocosNode
 from cocos.scene import Scene
 from cocos.tiles import ScrollableLayer, ScrollingManager
@@ -153,13 +152,11 @@ class Race(Scene):
                 # direction.
                 if checkpoint_stage == 2:
                     stats.checkpoints += 1
-                    print car, 'Checkpoint', stats.checkpoints
             elif checkpoint_stage <> stats.last_checkpoint_stage and stats.last_checkpoint_stage > -1:
                 # Car changed checkpoint stage and is driving the wrong way.
                 print car, 'WRONG WAY!', stats.last_checkpoint_stage, checkpoint_stage
                 if checkpoint_stage == 1:
                     stats.checkpoints -= 1
-                    print car, 'Checkpoint', stats.checkpoints
             
             stats.last_checkpoint_stage = checkpoint_stage
             
@@ -184,7 +181,6 @@ class Race(Scene):
                     self.add_result(stats)
                 else:
                     stats.laps += 1
-                    print car, 'Laps ', stats.laps
                     
             if isinstance(car, PlayerCar) and not self.player_finished:
                 if stats.finished:
