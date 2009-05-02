@@ -1,0 +1,41 @@
+README
+===========================================
+
+1. Welcome
+2. Requirements / installing
+3. Credits
+
+1. WELCOME
+===========================================
+Thanks for downloading RCr: Larry's Lawn. RCr is our entry for PyWeek #8, see
+http://www.pyweek.org for more information.
+
+If you find any bugs or have suggestions for the project, please report them at our 
+issue tracker at the project website (http://bitbucket.org/jtietema/racer/).
+
+2. REQUIREMENTS / INSTALLING
+===========================================
+As of now, there is no installer for RCr available, so you will need to install
+all dependencies yourself. Fortunately, most of the you (that is, the other
+contestants) will already have most libraries installed.
+
+This is the list of requirements for this version:
+
+- Python 2.5+
+- pyglet 1.1.3
+- cocos2d 0.3.0
+- PIL
+
+All dependencies except Python itself (of course) are available through
+easy_install.
+
+The game can be started by running: "python main.py" from the root directory of the game.
+
+3. CREDITS
+===========================================
+Coding:
+    Maik Gosenshuis
+    Jeroen Tietema
+
+Graphics and Sounds/Music:
+    See the CREDITS file for more information.

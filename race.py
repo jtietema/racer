@@ -312,8 +312,6 @@ class Race(Scene):
         
         for car in self.cars:
             car.pause()
-        
-        pygame.mixer.music.stop()            
 
 
 class Stats():
