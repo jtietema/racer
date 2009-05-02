@@ -1,4 +1,3 @@
 garden1
 garden2
-demo
 
