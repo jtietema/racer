@@ -3,6 +3,7 @@ import ConfigParser
 from PIL import Image
 
 import cocos
+import pygame.mixer
 
 
 CHECKPOINT_STAGE_TYPES = 3
@@ -42,6 +43,12 @@ class Track(cocos.sprite.Sprite):
         
         # set number of laps
         self.laps = cp.getint(track, 'laps')
+        
+        if cp.has_option(track, 'music'):
+            music_file = os.path.join('music', cp.get(track, 'music'))
+            pygame.mixer.music.load(music_file)
+            pygame.mixer.music.set_volume(0.3)
+            pygame.mixer.music.play(-1)
     
     def get_friction_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:

@@ -55,7 +55,7 @@ COMPUTER_NAMES = [
     'Fred'
 ]
 
-ENGINE_SOUND = pyglet.media.load('sound/engine.wav', streaming=False)
+ENGINE_SOUND = pyglet.media.load(os.path.join('sound', 'engine.wav'), streaming=False)
 
 
 class Car(CocosNode):
@@ -99,8 +99,8 @@ class Car(CocosNode):
     
     def move_sound_relative(self, (x, y)):
         """Moves the sound relative to the position supplied."""
-        s_x = (self.x - x) / 200
-        s_y = (self.y - y) / 200
+        s_x = (self.x - x) / 170
+        s_y = (self.y - y) / 170
         self.engine_sound.position = (s_x, s_y, 0)
     
     def pause(self):

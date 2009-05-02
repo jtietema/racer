@@ -2,6 +2,7 @@ import os
 
 from cocos.director import director
 import pyglet
+import pygame.mixer
 
 from menu import MenuScene
 from cups import Cup
@@ -12,6 +13,8 @@ director.init(width=1024, height=768, caption='RCr: Larry\'s Lawn')
 
 pyglet.resource.path = ['img', os.path.join('cups', 'garden')]
 pyglet.resource.reindex()
+
+pygame.mixer.init(44100, -16, 2, 1024)
 
 state.cup = Cup('garden')
 
