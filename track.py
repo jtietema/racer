@@ -47,7 +47,10 @@ class Track(cocos.sprite.Sprite):
         if cp.has_option(track, 'music'):
             music_file = os.path.join('music', cp.get(track, 'music'))
             pygame.mixer.music.load(music_file)
-            pygame.mixer.music.set_volume(0.3)
+            
+            if cp.has_option(track, 'music_volume'):
+                pygame.mixer.music.set_volume(cp.getfloat(track, 'music_volume'))
+            
             pygame.mixer.music.play(-1)
     
     def get_friction_at(self, (x,y)):
