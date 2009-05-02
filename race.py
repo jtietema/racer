@@ -313,6 +313,8 @@ class Race(Scene):
         
         for car in self.cars:
             car.pause()
+        
+        self.track.stop_music()
 
 
 class Stats():

@@ -3,6 +3,7 @@ import ConfigParser
 from PIL import Image
 
 import cocos
+import pyglet.media
 
 
 CHECKPOINT_STAGE_TYPES = 3
@@ -42,6 +43,22 @@ class Track(cocos.sprite.Sprite):
         
         # set number of laps
         self.laps = cp.getint(track, 'laps')
+        
+        if cp.has_option(track, 'music'):
+            music_file = cp.get(track, 'music')
+            music_source = pyglet.media.load(os.path.join('music', music_file))
+            
+            self.music = pyglet.media.Player()
+            self.music.queue(music_source)
+            
+            if cp.has_option(track, 'music_volume'):
+                self.music.volume = cp.getfloat(track, 'music_volume')
+            
+            self.music.eos_action = pyglet.media.Player.EOS_LOOP
+            
+            self.music.play()
+        else:
+            self.music = None
     
     def get_friction_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:
@@ -63,6 +80,10 @@ class Track(cocos.sprite.Sprite):
             elif pixel[1] > 125:
                 return 2
         return 0
+    
+    def stop_music(self):
+        if self.music is not None:
+            self.music.pause()
     
     def get_start(self):
         return self.start
