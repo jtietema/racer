@@ -1,6 +1,7 @@
 import bisect
 import os
 
+import pygame.mixer
 from cocos.cocosnode import CocosNode
 from cocos.scene import Scene
 from cocos.tiles import ScrollableLayer, ScrollingManager
