@@ -94,7 +94,7 @@ class MainMenu(Menu):
     
     def on_new_game(self):
         state.cup = cups.load(cups.list()[0])
-        race = Race(state.cup.next_track(), [state.profile.car, ComputerCar.get_default()])
+        race = Race(state.cup.next_track(), [state.profile.car, ComputerCar.get_default(), ComputerCar.get_default(), ComputerCar.get_default()])
         director.push(race)
     
     def on_shop(self):
