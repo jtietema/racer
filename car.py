@@ -94,8 +94,6 @@ class Car(CocosNode):
         self.engine_sound = pyglet.media.Player()
         self.engine_sound.queue(ENGINE_SOUND)
         
-        self.engine_sound.volume = 0.2
-        
         # Loop sound infinitely.
         self.engine_sound.eos_action = pyglet.media.Player.EOS_LOOP
     
@@ -137,7 +135,8 @@ class Car(CocosNode):
         # The initial speed of the dirt particles.
         self.dirt.speed = 0
         
-        self.engine_sound.pitch = 1
+        self.engine_sound.pitch = 0.7
+        self.engine_sound.volume = 0.1
     
     def set_part_dependant_properties(self):
         """Sets properties that depend on the car's parts. These mainly
@@ -171,7 +170,8 @@ class Car(CocosNode):
         self.dirt.speed = self.speed
         
         # Make the engine sound pitch relative to the speed.
-        self.engine_sound.pitch = 0.7 + min(self.speed / 200 * 0.5, 0.5)
+        self.engine_sound.pitch = 0.7 + min(abs(self.speed) / 1000 * 0.7, 0.7)
+        self.engine_sound.volume = 0.1 + min(abs(self.speed) / 1000 * 0.2, 0.2)
         
         r = math.radians(self.rotation)
         s = dt * self.speed
