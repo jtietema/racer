@@ -3,7 +3,12 @@ sounds/engine.wav
 Downloaded from: http://www.freesound.org/samplesViewSingle.php?id=16031
 License: http://creativecommons.org/licenses/sampling+/1.0/
 
-sounds/short_beep.wav + sounds/long_beep.wav
---------------------------------------------
+sounds/originals/beep.wav + sounds/short_beep.wav + sounds/long_beep.wav
+------------------------------------------------------------------------
 Original downloaded from: http://www.freesound.org/samplesViewSingle.php?id=29679
 License: http://creativecommons.org/licenses/sampling+/1.0/
+
+music/elgar_op39_1.mid
+----------------------
+Downloaded from: http://tirolmusic.blogspot.com/2009/01/elgar-pomp-and-circumstance-military.html
+License: http://creativecommons.org/licenses/by-nc-sa/2.1/jp/deed.en

@@ -1,4 +1,5 @@
 import bisect
+import os
 
 from cocos.cocosnode import CocosNode
 from cocos.scene import Scene
@@ -18,9 +19,9 @@ from podium import Podium
 import util
 
 
-SHORT_BEEP_SOUND = pyglet.media.load('sound/short_beep.wav', streaming=False)
+SHORT_BEEP_SOUND = pyglet.media.load(os.path.join('sound', 'short_beep.wav'), streaming=False)
 SHORT_BEEP_SOUND.volume = 0.2
-LONG_BEEP_SOUND = pyglet.media.load('sound/long_beep.wav', streaming=False)
+LONG_BEEP_SOUND = pyglet.media.load(os.path.join('sound', 'long_beep.wav'), streaming=False)
 LONG_BEEP_SOUND.volume = 0.2
 
 
@@ -307,8 +308,12 @@ class Race(Scene):
         state.cup.set_results_for_current_track(self.results)
     
     def on_exit(self):
+        super(Race, self).on_exit()
+        
         for car in self.cars:
             car.pause()
+        
+        pygame.mixer.music.stop()            
 
 
 class Stats():
