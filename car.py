@@ -103,11 +103,11 @@ class Car(CocosNode):
         s_y = (self.y - y) / 170
         self.engine_sound.position = (s_x, s_y, 0)
     
-    def pause(self):
+    def pause_sounds(self):
         """Pauses all race-specific behaviour of the car such as sound."""
         self.engine_sound.pause()
         
-    def resume(self):
+    def resume_sounds(self):
         """Starts all race-specific behaviour of the car such as sound."""
         self.engine_sound.seek(0)
         self.engine_sound.play()

@@ -8,12 +8,12 @@ sounds/originals/beep.wav + sounds/short_beep.wav + sounds/long_beep.wav
 Original downloaded from: http://www.freesound.org/samplesViewSingle.php?id=29679
 License: http://creativecommons.org/licenses/sampling+/1.0/
 
-music/elgar_op39_1.mid
-----------------------
+music/originals/elgar_op39_1.mid + music/elgar_op39_1.mid
+---------------------------------------------------------
 Downloaded from: http://tirolmusic.blogspot.com/2009/01/elgar-pomp-and-circumstance-military.html
 License: http://creativecommons.org/licenses/by-nc-sa/2.1/jp/deed.en
 
-music/chopin_op55_1.mid
------------------------
+music/originals/chopin_op55_1.mid + music/chopin_op55_1.mp3
+-----------------------------------------------------------
 Downloaded from: http://tirolmusic.blogspot.com/2007/10/2-nocturnes-op55-excerpt.html
 License: http://creativecommons.org/licenses/by-nc-sa/2.1/jp/deed.en
