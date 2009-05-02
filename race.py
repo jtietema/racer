@@ -8,14 +8,20 @@ from cocos.layer import ColorLayer, Layer
 from cocos.director import director
 from cocos.sprite import Sprite
 from pyglet.window import key
-import pyglet.clock
 from cocos.actions.instant_actions import CallFunc
 from cocos.actions.interval_actions import ScaleTo, Delay, MoveTo, AccelDeccel
+import pyglet.media
 
 from game_state import state
 from car import PlayerCar
 from podium import Podium
 import util
+
+
+SHORT_BEEP_SOUND = pyglet.media.load('sound/short_beep.wav', streaming=False)
+SHORT_BEEP_SOUND.volume = 0.2
+LONG_BEEP_SOUND = pyglet.media.load('sound/long_beep.wav', streaming=False)
+LONG_BEEP_SOUND.volume = 0.2
 
 
 class RaceException(Exception):
@@ -58,6 +64,8 @@ class Race(Scene):
             
             # Reset the car's state.
             car.reset()
+            
+            car.resume()
             
             # Set the car's position.
             car.position = grid[i][0]
@@ -122,10 +130,14 @@ class Race(Scene):
         )
         
     def update(self, dt):
-        """Updates all the cars once the race has started."""
+        """Updates all the cars once the race has started."""        
         for car in self.cars:
             # update the car
             car.update(dt)
+            
+            if car is not self.player_car:
+                # Change engine sound accordingly.
+                car.move_sound_relative(self.player_car.position)
             
             # Create a short-named reference.
             stats = self.stats[car]
@@ -293,6 +305,10 @@ class Race(Scene):
         self.autocomplete_results()
         
         state.cup.set_results_for_current_track(self.results)
+    
+    def on_exit(self):
+        for car in self.cars:
+            car.pause()
 
 
 class Stats():
@@ -377,6 +393,10 @@ class TrafficLights(CocosNode):
     def shift_overlay(self):
         """Removes one overlay, making the next light from the left light up.
            Raises an exception if all overlays have already been removed."""
+        if len(self.overlays) == 1:
+            LONG_BEEP_SOUND.play()
+        else:
+            SHORT_BEEP_SOUND.play()
         self.remove(self.overlays.pop(0))
         
 

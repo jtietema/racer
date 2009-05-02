@@ -10,6 +10,7 @@ from cocos.sprite import Sprite
 from cocos.director import director
 from pyglet.window import key
 import pyglet.resource
+import pyglet.media
 from cocos.particle import ParticleSystem, Color
 from cocos.euclid import Point2
 
@@ -48,8 +49,13 @@ COMPUTER_NAMES = [
     'Brutus',
     'Rufus',
     'Gunther',
-    'Grossini'
+    'Grossini',
+    'Helmut',
+    'Angus',
+    'Fred'
 ]
+
+ENGINE_SOUND = pyglet.media.load('sound/engine.wav', streaming=False)
 
 
 class Car(CocosNode):
@@ -60,7 +66,6 @@ class Car(CocosNode):
     
     def __init__(self, **kwargs):
         CocosNode.__init__(self)
-        
         
         # defaults
         self.width = 100
@@ -80,8 +85,34 @@ class Car(CocosNode):
         self.dirt = Dirt()
         self.add(self.dirt)
         
+        self.init_sounds()
+        
         self.reset()
         self.track = None
+    
+    def init_sounds(self):
+        self.engine_sound = pyglet.media.Player()
+        self.engine_sound.queue(ENGINE_SOUND)
+        
+        self.engine_sound.volume = 0.2
+        
+        # Loop sound infinitely.
+        self.engine_sound.eos_action = pyglet.media.Player.EOS_LOOP
+    
+    def move_sound_relative(self, (x, y)):
+        """Moves the sound relative to the position supplied."""
+        s_x = (self.x - x) / 200
+        s_y = (self.y - y) / 200
+        self.engine_sound.position = (s_x, s_y, 0)
+    
+    def pause(self):
+        """Pauses all race-specific behaviour of the car such as sound."""
+        self.engine_sound.pause()
+        
+    def resume(self):
+        """Starts all race-specific behaviour of the car such as sound."""
+        self.engine_sound.seek(0)
+        self.engine_sound.play()
     
     def reset(self, rotation=0):
         """Resets some properties of the car, such as rotation and speed.
@@ -91,17 +122,22 @@ class Car(CocosNode):
         self.speed = 0
         self.rotation = rotation
         
+        self.stopping = False
+        
         # The direction in which we are accelerating.
         self.accel_dir = 0
         
         # The direction in which we are rotating.
         self.rot_dir = 0
         
-        self.stopping = False
-        
+        # The current track the car is racing at. This reference is required
+        # to request some additional information during races.
         self.track = None
         
+        # The initial speed of the dirt particles.
         self.dirt.speed = 0
+        
+        self.engine_sound.pitch = 1
     
     def set_part_dependant_properties(self):
         """Sets properties that depend on the car's parts. These mainly
@@ -134,6 +170,8 @@ class Car(CocosNode):
         # Change dirt properties.
         self.dirt.speed = self.speed
         
+        # Make the engine sound pitch relative to the speed.
+        self.engine_sound.pitch = 0.7 + min(self.speed / 200 * 0.5, 0.5)
         
         r = math.radians(self.rotation)
         s = dt * self.speed
