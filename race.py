@@ -67,7 +67,7 @@ class Race(Scene):
             # Reset the car's state.
             car.reset()
             
-            car.resume()
+            car.resume_sounds()
             
             # Set the car's position.
             car.position = grid[i][0]
@@ -312,7 +312,7 @@ class Race(Scene):
         super(Race, self).on_exit()
         
         for car in self.cars:
-            car.pause()
+            car.pause_sounds()
         
         self.track.stop_music()
 
