@@ -200,7 +200,9 @@ class Car(CocosNode):
         return speed
     
     def is_valid_move(self, (target_x, target_y)):
-        return True
+        if self.track.get_friction_at((target_x, target_y)) > 0:
+            return True
+        return False
     
     def disable_controls(self):
         pass
