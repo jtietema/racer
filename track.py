@@ -3,27 +3,42 @@ import ConfigParser
 from PIL import Image
 
 import cocos
-import pyglet.media
-
+import pyglet
+import pyglet.info
 
 CHECKPOINT_STAGE_TYPES = 3
 
 
-class Track(cocos.sprite.Sprite):
+class Track(cocos.layer.Layer):
+    TEXTURE_SIZE = 1000
+    
     def __init__(self, cup, track):
+        super(Track, self).__init__()
         # load the tracks config file
         cp = ConfigParser.ConfigParser()
         cp.read(os.path.join('cups', cup, 'tracks.ini'))
         # check if the track is there
         if not cp.has_section(track):
             raise Exception('Track not found')
-        # load the track image
-        track_image = cp.get(track, 'track_image')
-        super(Track, self).__init__(track_image)
-        height = cp.getint(track, 'height')
-        width = cp.getint(track, 'width')
+        # load the track image(s)
+        track_image_name = cp.get(track, 'track_image')
+        track_image = pyglet.image.load(os.path.join('cups', cup,track_image_name))
+        
+        width, height = track_image.width, track_image.height
+        
+        # partition the image in multiple sprites
+        number_x = width / self.TEXTURE_SIZE
+        print number_x
+        for x in range(number_x):
+            number_y = height / self.TEXTURE_SIZE
+            print number_y
+            for y in range(number_y):
+                part_image = track_image.get_region(x * self.TEXTURE_SIZE, y * self.TEXTURE_SIZE, self.TEXTURE_SIZE, self.TEXTURE_SIZE)
+                sprite = cocos.sprite.Sprite(part_image)
+                sprite.position = (x * self.TEXTURE_SIZE + self.TEXTURE_SIZE / 2, y * self.TEXTURE_SIZE + self.TEXTURE_SIZE / 2)
+                self.add(sprite)
+        
         self.size = (width, height)
-        self.position = (width / 2, height / 2)
         
         # set starting grid
         self.start = []

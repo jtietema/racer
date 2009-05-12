@@ -11,6 +11,7 @@ from game_state import state
 director.init(width=1024, height=768, caption='RCr: Larry\'s Lawn')
 
 pyglet.resource.path = ['img', os.path.join('cups', 'garden')]
+#pyglet.resource.path = ['img']
 pyglet.resource.reindex()
 
 state.cup = Cup('garden')
