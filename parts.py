@@ -29,7 +29,7 @@ options = {
             'price': 0
         },
         'monster_truck': {
-            'name': 'Monster Truck Engine',
+            'name': 'Monster Truck',
             'power': 10,
             'price': 1000
         }
