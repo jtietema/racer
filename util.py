@@ -142,3 +142,18 @@ class Polygon:
 def print_poly(poly):
     for point in poly.points:
         print 'X', point.x, 'Y', point.y
+
+
+def absolute_position(node):
+    """Calculates the absolute position of a CocosNode as virtual
+       coordinates."""
+    x, y = node.position
+
+    node = node.parent
+
+    while node:
+        x += node.x + node.children_anchor_x
+        y += node.y + node.children_anchor_y
+        node = node.parent
+
+    return x, y
