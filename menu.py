@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # TODO: improve visually
 
 import sys

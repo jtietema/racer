@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
 import os
 import ConfigParser
-from PIL import Image
 
 import cocos
 import pyglet
 import pyglet.info
+from pyglet.image.codecs.png import PNGImageDecoder
+
 
 CHECKPOINT_STAGE_TYPES = 3
 
@@ -50,8 +52,11 @@ class Track(cocos.layer.Layer):
         
         # get track overlay
         overlay_file = cp.get(track, 'overlay_image')
-        overlay = Image.open(os.path.join('cups', 'garden', overlay_file))
-        self.overlay = overlay.load()
+        # set the encode explicitly otherwise we get in trouble with the image_data format
+        overlay_image = pyglet.image.load(os.path.join('cups', cup, overlay_file), decoder=PNGImageDecoder())
+        image_data = overlay_image.get_image_data()
+        data = image_data.get_data('RGBA', image_data.pitch)
+        self.overlay_data = map(ord, list(data))
         
         # set number of checkpoints
         self.checkpoints = cp.getint(track, 'checkpoints')
@@ -75,21 +80,29 @@ class Track(cocos.layer.Layer):
         else:
             self.music = None
     
+    def get_overlay_pixel(self, (x,y)):
+        overlay_y = int((self.size[1] - y) / 4)
+        overlay_x = int(x / 4)
+        rows = ((overlay_y-1) * 4 * int(self.size[0] / 4))
+        pos = int(rows + (overlay_x - 1) * 4)
+        pixel = self.overlay_data[pos:pos+4]
+        return pixel
+    
     def get_friction_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:
-            pixel = self.overlay[x/4,(self.size[1] - y) / 4]
+            pixel = self.get_overlay_pixel((x,y))
             return pixel[2]
         return 25
     
     def get_path_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:
-            pixel = self.overlay[x/4,(self.size[1] - y) / 4]
+            pixel = self.get_overlay_pixel((x,y))
             return pixel[0]
         return 0
     
     def get_checkpoint_stage_at(self, (x,y)):
         if 0 < x < self.size[0] and 0 < y < self.size[1]:
-            pixel = self.overlay[x/4,(self.size[1] - y) / 4]
+            pixel = self.get_overlay_pixel((x,y))
             if 10 < pixel[1] < 100:
                 return 1
             elif pixel[1] > 125:
