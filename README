@@ -16,18 +16,14 @@ issue tracker at the project website (http://bitbucket.org/jtietema/racer/).
 2. REQUIREMENTS / INSTALLING
 ===========================================
 As of now, there is no installer for RCr available, so you will need to install
-all dependencies yourself. Fortunately, most of the you (that is, the other
-contestants) will already have most libraries installed.
+all dependencies yourself. 
 
 This is the list of requirements for this version:
 
 - Python 2.5+
-- pyglet 1.1.3
-- cocos2d 0.3.0
-- PIL
-
-All dependencies except Python itself (of course) are available through
-easy_install.
+- Numpy (python-numpy)
+- AVbin
+- OpenAL (Linux only?)
 
 The game can be started by running: "python main.py" from the root directory of the game.
 
