@@ -27,6 +27,7 @@ from cocos.layer import MultiplexLayer
 
 from shop import Shop
 from race import Race
+from loading import LoadTrack
 import cups
 from game_state import state
 from car import ComputerCar
@@ -112,8 +113,7 @@ class MainMenu(Menu):
     
     def on_new_game(self):
         state.cup = cups.load(cups.list()[0])
-        race = Race(state.cup.next_track(), [state.profile.car, ComputerCar.get_default(), ComputerCar.get_default()])
-        director.push(race)
+        director.push(LoadTrack(state.cup.next_track()))
     
     def on_shop(self):
         director.push(Shop())

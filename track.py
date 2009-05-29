@@ -33,31 +33,20 @@ class Track(cocos.layer.Layer):
     
     def __init__(self, cup, track):
         super(Track, self).__init__()
+        self.name = track
+        self.cup = cup
+        
+        self.track_image = None
+        self.overlay_data = None
+        self.size = None
+        self.partition_list = None
+        
         # load the tracks config file
-        cp = ConfigParser.ConfigParser()
+        self.cp = cp = ConfigParser.ConfigParser()
         cp.read(os.path.join('cups', cup, 'tracks.ini'))
         # check if the track is there
         if not cp.has_section(track):
             raise Exception('Track not found')
-        # load the track image(s)
-        track_image_name = cp.get(track, 'track_image')
-        track_image = pyglet.image.load(os.path.join('cups', cup,track_image_name))
-        
-        width, height = track_image.width, track_image.height
-        
-        # partition the image in multiple sprites
-        number_x = width / self.TEXTURE_SIZE
-        print number_x
-        for x in range(number_x):
-            number_y = height / self.TEXTURE_SIZE
-            print number_y
-            for y in range(number_y):
-                part_image = track_image.get_region(x * self.TEXTURE_SIZE, y * self.TEXTURE_SIZE, self.TEXTURE_SIZE, self.TEXTURE_SIZE)
-                sprite = cocos.sprite.Sprite(part_image)
-                sprite.position = (x * self.TEXTURE_SIZE + self.TEXTURE_SIZE / 2, y * self.TEXTURE_SIZE + self.TEXTURE_SIZE / 2)
-                self.add(sprite)
-        
-        self.size = (width, height)
         
         # set starting grid
         self.start = []
@@ -67,29 +56,60 @@ class Track(cocos.layer.Layer):
             sr = cp.getint(track, 'start' + str(i) + 'r')
             self.start.append(((sx, sy), sr))
         
-        # get track overlay
-        overlay_file = cp.get(track, 'overlay_image')
-        # set the encode explicitly otherwise we get in trouble with the image_data format
-        overlay_image = pyglet.image.load(os.path.join('cups', cup, overlay_file), decoder=PNGImageDecoder())
-        image_data = overlay_image.get_image_data()
-        data = image_data.get_data('RGBA', image_data.pitch)
-        self.overlay_data = map(ord, list(data))
-        
         # set number of checkpoints
         self.checkpoints = cp.getint(track, 'checkpoints')
         
         # set number of laps
         self.laps = cp.getint(track, 'laps')
         
-        if cp.has_option(track, 'music'):
-            music_file = cp.get(track, 'music')
+    def load_images(self):
+        '''load the track image(s)'''
+        track_image_name = self.cp.get(self.name, 'track_image')
+        self.track_image = pyglet.image.load(os.path.join('cups', self.cup,track_image_name))
+        
+        width, height = self.track_image.width, self.track_image.height
+        
+        # partition the image in multiple sprites
+        number_x = width / self.TEXTURE_SIZE
+        number_y = height / self.TEXTURE_SIZE
+        self.partition_list = []
+        for x in range(number_x):
+            for y in range(number_y):
+                self.partition_list.append((x * self.TEXTURE_SIZE, y * self.TEXTURE_SIZE))
+        
+        self.size = (width, height)
+    
+    def load_overlay(self):
+        '''Load the overlay'''
+        overlay_file = self.cp.get(self.name, 'overlay_image')
+        # set the encode explicitly otherwise we get in trouble with the image_data format
+        overlay_image = pyglet.image.load(os.path.join('cups', self.cup, overlay_file), decoder=PNGImageDecoder())
+        image_data = overlay_image.get_image_data()
+        data = image_data.get_data('RGBA', image_data.pitch)
+        self.overlay_data = map(ord, list(data))
+    
+    def load_partitions(self):
+        x, y = self.partition_list.pop(0)
+        part_image = self.track_image.get_region(x, y, self.TEXTURE_SIZE, self.TEXTURE_SIZE)
+        sprite = cocos.sprite.Sprite(part_image)
+        sprite.position = (x + self.TEXTURE_SIZE / 2, y + self.TEXTURE_SIZE / 2)
+        self.add(sprite)
+        partitions_left = len(self.partition_list)
+        if partitions_left == 0:
+            self.track_image = None # release image for garbage collection
+        return partitions_left
+    
+    def load_music(self):
+        '''Load the track music'''
+        if self.cp.has_option(self.name, 'music'):
+            music_file = self.cp.get(self.name, 'music')
             music_source = pyglet.media.load(os.path.join('music', music_file))
             
             self.music = pyglet.media.Player()
             self.music.queue(music_source)
             
-            if cp.has_option(track, 'music_volume'):
-                self.music.volume = cp.getfloat(track, 'music_volume')
+            if self.cp.has_option(self.name, 'music_volume'):
+                self.music.volume = self.cp.getfloat(self.name, 'music_volume')
             
             self.music.eos_action = pyglet.media.Player.EOS_LOOP
             

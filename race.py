@@ -468,8 +468,9 @@ class ResultsMenu(menu.Menu):
 
     def on_next_race(self):
         self.get_ancestor(Race).save_results()
-        race = Race(state.cup.next_track(), [state.profile.car, ComputerCar.get_default(), ComputerCar.get_default(), ComputerCar.get_default()])
-        director.replace(race)
+        # hack to prevent circular imports
+        from loading import LoadTrack
+        director.replace(LoadTrack(state.cup.next_track()))
 
     def on_back(self):
         state.cup = None
