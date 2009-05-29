@@ -449,22 +449,22 @@ class Director(event.EventDispatcher):
         self.dispatch_event("on_resize", width, height)
 
     def set_projection(self):
-        '''Sets a 3D projection mantaining the aspect ratio of the original window size'''
-
-        width, height = self.window.width, self.window.height
-        ow, oh = self.get_window_size()
-
+        '''Sets a 3D projection mantaining the aspect ratio of the original window size''' 
+        width, height = self.window.width, self.window.height                
+        # ow, oh = self.get_window_size()
+        # 
+        # # Maintain aspect ratio
+        # if ow <> width or oh <> height:
+        #     scale = max(ow / (width * 1.0), oh / (height * 1.0))
+        #     width = int(round(ow / scale, 0))
+        #     height = int(round(oh / scale, 0))
+        
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(60, 1.0*width/height, 0.1, 3000.0)
+        glOrtho(0, width, 0, height, -1, 1)
         glMatrixMode(GL_MODELVIEW)
 
-        glLoadIdentity()
-        gluLookAt( ow/2.0, oh/2.0, oh/1.1566,       # eye
-                   ow / 2.0, oh / 2.0, 0,           # center
-                   0.0, 1.0, 0.0                    # up vector
-                   )
         
     #
     # Misc functions
