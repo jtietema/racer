@@ -354,8 +354,8 @@ class ButtonLayer(Layer):
         self.parent.cancel()
     
     def update(self):
-        if self.parent.new_balance < 0:
-            self.ok_button.enabled = False
+        self.ok_button.enabled = (self.parent.new_balance >= 0)
+        
 
 class LayoutLayer(Layer):
     def __init__(self, (width, height)):
@@ -507,7 +507,10 @@ class LabelButton(Button):
            propagated to the label that is rendered on the button,
            enabling you to alter the font properties of the text. See
            the pyglet Label documentation for more information."""
-
+        
+        self.enabled_opacity = bg_color[3]
+        self.disabled_opacity = int(bg_color[3] * disabled_opacity)
+        
         super(LabelButton, self).__init__((width, height))
 
         self.bg_layer = ColorLayer(*(bg_color + (width, height)))
@@ -518,20 +521,16 @@ class LabelButton(Button):
         self.add(self.label, z=1)
 
         self.click_handlers = []
-        
-        self.enabled_opacity = bg_color[3]
-        self.disabled_bg_color = int(bg_color[3] * disabled_opacity)
-        
-        self._enabled = True
-        self.enabled = property(lambda self: self._enabled, self._set_enabled)
     
     def _set_enabled(self, enabled):
         self._enabled = enabled
         
-        if enabled:
-            self.bg_layer.opacity = self.enabled_opacity
-        else:
-            self.bg_layer.opacity = self.disabled_opacity
+        if hasattr(self, 'bg_layer'):
+            if enabled:
+                self.bg_layer.opacity = self.enabled_opacity
+            else:
+                self.bg_layer.opacity = self.disabled_opacity
+    enabled = property(lambda self: self._enabled, _set_enabled)
 
 
 class PartButton(Button):
