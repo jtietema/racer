@@ -41,7 +41,7 @@ FRICTIONS = {
     'asphalt': 0.5
 }
 
-TYRE_NAMES = ['tyre_tl','tyre_tr','tyre_bl','tyre_br']
+TYRE_NAMES = ['tyre_fl','tyre_fr','tyre_bl','tyre_br']
 
 MAX_TYRE_ROTATION = 30
 
@@ -163,7 +163,7 @@ class Car(CocosNode):
         self.rotation = (self.rotation + (rot_factor * ROTATION_SPEED * self.rot_dir * signum(self.speed) * dt)) % 360
         
         tyre_rotation = MAX_TYRE_ROTATION * self.rot_dir
-        for tyre in self.top_tyres:
+        for tyre in self.front_tyres:
             tyre.rotation = tyre_rotation
         
         # Change dirt properties.
@@ -289,10 +289,24 @@ class Car(CocosNode):
     tyres = property(lambda self: self.tyres_name, _set_tyres)
     tyres_properties = property(lambda self: parts.tyres[self.tyres_name],
         doc='Returns the properties of the tyres, as defined in the parts config.')
-    top_tyres = property(lambda self: (self.get('tyre_tl'), self.get('tyre_tr')),
+    front_tyres = property(lambda self: (self.get('tyre_fl'), self.get('tyre_fr')),
         doc='Returns the top two tyre Sprites.')
-    bottom_tyres = property(lambda self: (self.get('tyre_bl'), self.get('tyre_br')),
+    back_tyres = property(lambda self: (self.get('tyre_bl'), self.get('tyre_br')),
         doc='Returns the bottom two tyre Sprites.')
+    
+    def _get_part_properties(self):
+        result = {}
+        for group in parts.options:
+            result[group] = getattr(self, group + '_properties')
+        return result
+    part_properties = property(_get_part_properties)
+    
+    def _get_cost(self):
+        cost = 0
+        for properties in self.part_properties.values():
+            cost += properties['price']
+        return cost
+    cost = property(_get_cost)
     
     def align_tyres(self):
         """Aligns the tyres with the body."""
@@ -302,10 +316,10 @@ class Car(CocosNode):
             
             # Determine if this tyre is to be aligned at the top or the
             # bottom.
-            tb = tyre_name[-2]
+            fb = tyre_name[-2]
             
-            x = self.body_properties['tyres_' + tb + 'x_offset']
-            y = self.body_properties['tyres_' + tb + 'y_offset']
+            x = self.body_properties['tyres_' + fb + 'x_offset']
+            y = self.body_properties['tyres_' + fb + 'y_offset']
             
             # If the tyre is to be aligned on the left, flip the x offset.
             if tyre_name[-1] == 'l':
