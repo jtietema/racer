@@ -22,8 +22,8 @@ options = {
             'name': 'Fellali',
             'image': 'chassis.png',
             'mass': 3,
-            'tyres_tx_offset': 62,
-            'tyres_ty_offset': 75,
+            'tyres_fx_offset': 62,
+            'tyres_fy_offset': 75,
             'tyres_bx_offset': 65,
             'tyres_by_offset': -90,
             'price': 0
@@ -32,8 +32,8 @@ options = {
             'name': 'Blue',
             'image': 'body2.png',
             'mass': 8,
-            'tyres_tx_offset': 77,
-            'tyres_ty_offset': 75,
+            'tyres_fx_offset': 77,
+            'tyres_fy_offset': 75,
             'tyres_bx_offset': 80,
             'tyres_by_offset': -90,
             'price': 100

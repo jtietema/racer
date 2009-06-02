@@ -175,3 +175,31 @@ def absolute_position(node):
         node = node.parent
 
     return x, y
+
+class curry:
+    def __init__(self, fun, *args, **kwargs):
+        self.fun = fun
+        self.pending = args[:]
+        self.kwargs = kwargs.copy()
+
+    def __call__(self, *args, **kwargs):
+        if kwargs and self.kwargs:
+            kw = self.kwargs.copy()
+            kw.update(kwargs)
+        else:
+            kw = kwargs or self.kwargs
+
+        return self.fun(*(self.pending + args), **kw)
+
+
+def color_from_hex(hex):
+    """Converts a color from its hexadecimal representation into a 3-digit
+    RGB tuple."""
+    import re
+    
+    match = re.match(r'^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$', hex, re.I)
+    
+    if not match:
+        raise RuntimeError('Invalid hex format')
+    
+    return tuple([int(x, 16) for x in match.groups()])

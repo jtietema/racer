@@ -18,16 +18,21 @@
 
 import os
 from string import capwords
+import copy
 
 import cocos
 from cocos.director import director
 from cocos.layer import Layer, ColorLayer, MultiplexLayer
 from cocos.scene import Scene
+from cocos.sprite import Sprite
 import pyglet
 
 import util
 import parts
 from game_state import state
+
+
+# TODO: show popup when leaving shop after changes have been made.
 
 
 class Shop(Scene):
@@ -38,9 +43,36 @@ class Shop(Scene):
         # reset to their initial state.
         state.profile.car.reset()
         
-        self.add(PreviewFrame())
-        self.add(PartsFrame())
-        self.add(BalanceLayer())
+        # Copy original car to calculate price differences.
+        self.car = copy.copy(state.profile.car)
+        
+        self.balance_layer = BalanceLayer(self.car)
+        self.button_layer = ButtonLayer()
+        
+        self.add(PreviewFrame(self.car))
+        self.add(PartsFrame(self.car))
+        self.add(self.balance_layer)
+        self.add(self.button_layer)
+    
+    new_balance = property(lambda self: self.balance_layer.new_balance)
+    
+    def update(self):
+        # Note that the order is significant; button layer requests updated
+        # data from balance layer.
+        self.balance_layer.update()
+        self.button_layer.update()
+    
+    def commit(self):
+        """Commits the changes of the modified car to the profile."""
+        assert self.new_balance >= 0
+        
+        state.profile.money = self.new_balance
+        state.profile.car = self.car
+        state.profile.save()
+        director.pop()
+        
+    def cancel(self):
+        director.pop()
 
 
 class Frame(Layer):
@@ -114,10 +146,10 @@ class SpinnerFrame(Frame):
 
         self.current_index = index
 
-    def previous_group(self):
+    def previous_group(self, *args, **kwargs):
         self.switch_group(-1)
 
-    def next_group(self):
+    def next_group(self, *args, **kwargs):
         self.switch_group(1)
     
     # TODO: dynamic
@@ -133,7 +165,7 @@ class SpinnerFrame(Frame):
 class PreviewFrame(Frame):
     """Frame to hold the car's preview representation."""
     
-    def __init__(self):
+    def __init__(self, car):
         width, height = 400, 500
         x = 10
         y = director.window.height - height - 10
@@ -143,11 +175,13 @@ class PreviewFrame(Frame):
         
         self.position = (x, y)
         
+        self.car = car
+        
         # Draw the car.
-        state.profile.car.scale = 1
-        state.profile.car.x = self.content_layer.width / 2
-        state.profile.car.y = self.content_layer.height / 2 - 40
-        self.content_layer.add(state.profile.car)
+        self.car.scale = 1
+        self.car.x = self.content_layer.width / 2
+        self.car.y = self.content_layer.height / 2 - 40
+        self.content_layer.add(self.car)
         
         # Add car property bars.
         label_x = 10
@@ -173,63 +207,81 @@ class PartsFrame(SpinnerFrame):
     """Holds all the parts that can be selected for the car. Also highlights
        the currently selected parts."""
     
-    def __init__(self):
+    def __init__(self, car):
         width = 598
         height = 500
         x = director.window.width - width - 10
         y = director.window.height - height - 10
         
-        content_size = (width - 26, height - 80)
-        content_position = (3, 3)
-        
-        group_titles = ['Body', 'Engine', 'Tyres']
+        group_titles = []
         layers = []
         
+        self.car = car
+        
+        # Keep track of the highlighted button per group.
+        self.highlighted_buttons = {}
+        
         # Body layer        
-        body_layer = GridLayer(content_size, 4, 4, padding=2)
-        body_layer.position = content_position
-        button_size = (body_layer.column_width, body_layer.row_height)
-        for part_id, properties in parts.body.items():
-            button = LabelButton(properties['name'], button_size)
-            body_layer.add(button)
-        layers.append(body_layer)
+        group_titles.append('Body')
+        layers.append(self.create_parts_layer('body', width, height))
         
-        # Engines layer        
-        engines_layer = GridLayer(content_size, 4, 4, padding=2)
-        engines_layer.position = content_position
-        button_size = (engines_layer.column_width, engines_layer.row_height)
-        for part_id, properties in parts.engine.items():
-            button = LabelButton(properties['name'], button_size)
-            engines_layer.add(button)
-        layers.append(engines_layer)
+        # Engines layer
+        group_titles.append('Engine')
+        layers.append(self.create_parts_layer('engine', width, height))
         
-        # Tyres layer        
-        tyres_layer = GridLayer(content_size, 4, 4, padding=2)
-        tyres_layer.position = content_position
-        button_size = (tyres_layer.column_width, tyres_layer.row_height)
-        for part_id, properties in parts.tyres.items():
-            button = LabelButton(properties['name'], button_size)
-            tyres_layer.add(button)
-        layers.append(tyres_layer)
+        # Tyres layer
+        group_titles.append('Tyres')
+        layers.append(self.create_parts_layer('tyres', width, height))
         
         super(PartsFrame, self).__init__((width, height), group_titles,
             layers)
         
         self.position = (x, y)
+    
+    def create_parts_layer(self, group_name, width, height):
+        layer = GridLayer((width - 26, height - 80), 3, 4, padding=2)
+        layer.position = (3, 3)
+        button_size = (layer.column_width, layer.row_height)
+        for part_id, properties in parts.options[group_name].items():
+            button = PartButton(properties.get('image'), properties['name'],
+                properties['price'], button_size)
+
+            button.on_click(util.curry(self.select_part, group_name,
+                part_id))
+
+            if part_id == getattr(self.car, group_name):
+                self.highlighted_buttons[group_name] = button
+                button.highlight()
+
+            layer.add(button)
+            
+        return layer
+    
+    def select_part(self, group, part_id, button):
+        self.highlighted_buttons[group].unhighlight()
+        button.highlight()
+        self.highlighted_buttons[group] = button
+        
+        setattr(self.car, group, part_id)
+        
+        self.parent.update()
 
 
 class BalanceLayer(Layer):
     """Holds the current balance of the player and displays the balance
        after purchase of the selected parts."""
     
-    def __init__(self):        
+    def __init__(self, car):        
         super(BalanceLayer, self).__init__()
         
         x = 10
+        real_x = x + 20
         
         self.position = (x, 10)
         self.width = 400
         self.height = 230
+        
+        self.car = car
         
         heading = util.Label('Balance', font_size=18, x=x)
         heading.y = self.height - heading.height
@@ -237,19 +289,22 @@ class BalanceLayer(Layer):
         
         y = heading.y - 30
         
-        money = util.Label(str(state.profile.money), x=x, y=y, font_size=14,
+        money = util.Label(str(state.profile.money), x=real_x, y=y, font_size=14,
             width=self.width, halign='right')
         self.add(money)
         
         y -= 20
         
-        self.cost_label = util.Label('0', x=x, y=y, font_size=14,
+        self.cost_label = util.Label('0', x=real_x, y=y, font_size=14,
             halign='right')
         self.add(self.cost_label)
         
+        minus_label = util.Label('-', x=x, y=y, font_size=14, halign='left')
+        self.add(minus_label)
+        
         y -= 30
         
-        self.balance_label = util.Label(str(state.profile.money), x=x, y=y,
+        self.balance_label = util.Label(str(state.profile.money), x=real_x, y=y,
             font_size=14, halign='right')
         self.add(self.balance_label)
         
@@ -260,11 +315,47 @@ class BalanceLayer(Layer):
         self.cost_label.text = str(cost)
         self.balance_label.text = str(new_balance)
     
+    def update(self):
+        """Updates the layer based on the car's state."""
+        self.set_cost(self.car.cost)
+    
     new_balance = property(lambda self: int(self.balance_label.text),
         doc="""Returns the new balance for the player after the combined
                purchases have been made. This is based on the value that was
                last passed to set_cost().""")
 
+
+class ButtonLayer(Layer):
+    def __init__(self):
+        super(ButtonLayer, self).__init__()
+        
+        self.width = 598
+        self.height = 230
+        self.x = director.window.width - self.width - 10
+        self.y = 10
+        
+        button_size = (100, 50)
+        bg_color = util.color_from_hex('#FF892E') + (255,)
+        
+        cancel_button = LabelButton('Cancel', button_size, bg_color=bg_color)
+        cancel_button.position = (self.width - cancel_button.width, 0)
+        cancel_button.on_click(self.cancel)
+        self.add(cancel_button)
+        
+        self.ok_button = LabelButton('OK', button_size, bg_color=bg_color)
+        self.ok_button.position = (cancel_button.x - self.ok_button.width - 20, 0)
+        self.ok_button.on_click(self.ok)
+        self.add(self.ok_button)
+    
+    def ok(self, *args, **kwargs):
+        self.parent.commit()
+    
+    def cancel(self, *args, **kwargs):
+        self.parent.cancel()
+    
+    def update(self):
+        if self.parent.new_balance < 0:
+            self.ok_button.enabled = False
 
 class LayoutLayer(Layer):
     def __init__(self, (width, height)):
@@ -381,9 +472,11 @@ class Button(Layer):
         # We want to be able to maintain a list of handlers for button
         # clicks.
         self.click_handlers = []
+        
+        self.enabled = True
     
     def on_click(self, method):
-        """Registers a new on click event handler."""
+        """Registers a new on click event handler."""        
         if method in self.click_handlers:
            raise RuntimeError("Method already registered.")
 
@@ -393,9 +486,9 @@ class Button(Layer):
         """Pyglet callback that is automatically called whenever the mouse
            is pressed. This method takes care of checking if any action
            should be taken."""
-        if self.collide_point(*director.get_virtual_coordinates(x, y)):
+        if self.enabled and self.collide_point(*director.get_virtual_coordinates(x, y)):
             for method in self.click_handlers:
-                method()
+                method(self)
 
     def collide_point(self, x, y):
        """Determines if a certain coordinate is inside the button's area."""
@@ -408,24 +501,89 @@ class Button(Layer):
 
 class LabelButton(Button):
     def __init__(self, caption, (width, height),
-       bg_color=(150, 150, 150, 255), fg_color=(0, 0, 0, 255),
-       **kwargs):
-       """Initializes a new button. Any additional keyword arguments are
-          propagated to the label that is rendered on the button,
-          enabling you to alter the font properties of the text. See
-          the pyglet Label documentation for more information."""
+        bg_color=(150, 150, 150, 255), fg_color=(0, 0, 0, 255),
+        disabled_opacity=0.5, **kwargs):
+        """Initializes a new button. Any additional keyword arguments are
+           propagated to the label that is rendered on the button,
+           enabling you to alter the font properties of the text. See
+           the pyglet Label documentation for more information."""
 
-       super(LabelButton, self).__init__((width, height))
+        super(LabelButton, self).__init__((width, height))
 
-       self.bg_layer = ColorLayer(*(bg_color + (width, height)))
-       self.add(self.bg_layer, z=0)
+        self.bg_layer = ColorLayer(*(bg_color + (width, height)))
+        self.add(self.bg_layer, z=0)
 
-       self.label = util.Label(caption, color=fg_color, anchor_x='center',
+        self.label = util.Label(caption, color=fg_color, anchor_x='center',
            anchor_y='center', x=self.width / 2, y=self.height / 2, **kwargs)
-       self.add(self.label, z=1)
+        self.add(self.label, z=1)
 
-       self.click_handlers = []
+        self.click_handlers = []
+        
+        self.enabled_opacity = bg_color[3]
+        self.disabled_bg_color = int(bg_color[3] * disabled_opacity)
+        
+        self._enabled = True
+        self.enabled = property(lambda self: self._enabled, self._set_enabled)
+    
+    def _set_enabled(self, enabled):
+        self._enabled = enabled
+        
+        if enabled:
+            self.bg_layer.opacity = self.enabled_opacity
+        else:
+            self.bg_layer.opacity = self.disabled_opacity
 
+
+class PartButton(Button):
+    HIGHLIGHT_BG_COLOR = (50, 50, 50, 255)
+    
+    def __init__(self, image, caption, price, (width, height)):
+        super(PartButton, self).__init__((width, height))
+        
+        center_x = self.width / 2
+        label_top_margin = 10
+        
+        price_label = util.Label(str(price), color=(255,) * 4, anchor_x='center',
+           anchor_y='bottom', x=center_x, y=0)
+        self.add(price_label, z=1) 
+        
+        name_label = util.Label(caption, color=(255,) * 4, anchor_x='center',
+           anchor_y='bottom', x=center_x, y=price_label.height + 3)
+        self.add(name_label, z=1)
+        
+        # Part image
+        if image is not None:
+            img = pyglet.image.load('img/' + image)
+        
+            # The total height the label area of the button occupies.
+            labels_height = name_label.element.y + name_label.height + label_top_margin
+        
+            max_width = width * 1.0
+            max_height = (height - labels_height - 5) * 1.0
+            scale = min([max_width / img.width, max_height / img.height, 1])
+        
+            image_y = labels_height + (max_height / 2)
+            self.image = Sprite(img, scale=scale,
+                position=(center_x, image_y))
+            self.add(self.image, z=1)
+        
+        self.bg_layer = None
+    
+    def highlight(self):
+        """Highlights this part, meaning it is selected as the current part."""
+        if self.bg_layer:
+            return
+        
+        self.bg_layer = ColorLayer(*(PartButton.HIGHLIGHT_BG_COLOR
+            + (self.width, self.height)))
+        self.add(self.bg_layer, z=0)
+    
+    def unhighlight(self):
+        """Removes the highlight for this button (if any)."""
+        if self.bg_layer:
+            self.remove(self.bg_layer)
+            self.bg_layer = None
+    
 
 class Bar(Layer):
     """Represents a filled bar, that can be used for progress bars."""
