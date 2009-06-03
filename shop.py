@@ -368,7 +368,7 @@ class BalanceLayer(Layer):
         """Updates the layer based on the car's state."""
         self.set_cost(self.car.cost)
     
-    new_balance = property(lambda self: int(self.balance_label.text),
+    new_balance = property(lambda self: state.profile.money - int(self.cost_label.text),
         doc="""Returns the new balance for the player after the combined
                purchases have been made. This is based on the value that was
                last passed to set_cost().""")
