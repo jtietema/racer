@@ -46,15 +46,12 @@ Assuming the following XML file called "example.xml"::
 
     <?xml version="1.0"?>
     <resource>
-      <require file="ground-tiles.xml" namespace="ground" />
+      <requires file="ground-tiles.xml" namespace="ground" />
 
       <rectmap id="level1">
        <column>
-        <cell>
-          <tile ref="ground:grass" />
-        </cell>
-        <cell>
-          <tile ref="ground:house" />
+        <cell tile="ground:grass" />
+        <cell tile="ground:house">
           <property type="bool" name="secretobjective" value="True" />
         </cell>
        </column>
@@ -64,31 +61,26 @@ Assuming the following XML file called "example.xml"::
 You may load that resource and examine it::
 
   >>> r = load('example.xml')
-  >>> r['level1']
+  >>> map = r['level1']
 
 and then, assuming that level1 is a map::
 
-  >>> scene = cocos.scene.Scene(r['level1'])
+  >>> scene = cocos.scene.Scene(map)
 
-if you wish for the level to scroll, you use the ScrollingManager::
+and then either manually select the tiles to display:
+
+  >>> map.set_view(0, 0, window_width, window_height)
+
+or if you wish for the level to scroll, you use the ScrollingManager::
 
   >>> manager = tiles.ScrollingManager()
-  >>> manager.append(r['level1']
+  >>> manager.add(map)
 
 and later set the focus with::
 
   >>> manager.set_focus(focus_x, focus_y)
 
-Typically the focus is set to the center of the player's sprite. The
-focusing will honor any tile map boundaries and prevent area outside
-those boundaries from being displayed.
-
-If you are only scrolling layers with sprites in them (ie. regular
-Cocos Layers, not RectMapLayers) then there are no boundaries and
-the map will scroll without bound in any direction.
-
-If you wish you may force the focus to display areas outside your
-tile maps you may use the ``force_focus`` method of ScrollingManager.
+See the section on `controlling map scrolling`_ below for more detail.
 
 
 XML file contents
@@ -101,17 +93,17 @@ XML resource files must contain a document-level tag <resource>::
      ...
     </resource>
 
-You may draw in other resource files by using the <require> tag:
+You may draw in other resource files by using the <requires> tag:
 
-    <require file="road-tiles.xml" />
+    <requires file="road-tiles.xml" />
 
 This will load "road-tiles.xml" into the resource's namespace.
 If you wish to avoid id clashes you may supply a namespace:
 
-    <require file="road-tiles.xml" namespace="road" />
+    <requires file="road-tiles.xml" namespace="road" />
 
 If a namespace is given then the element ids from the "road-tiles.xml"
-will be prefixed by the namespace and a period, e.g. "road.bitumen".
+will be prefixed by the namespace and a period, e.g. "road:bitumen".
 
 Other tags within <resource> are:
 
@@ -146,14 +138,80 @@ Other tags within <resource> are:
         <cell tile="" />
        </column>
 
+Map, Cell and Tile Properties
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Most tags may additionally have properties specified as:
 
    <property [type=""] name="" value="" />
 
 Where type is one of "unicode", "int", "float" or "bool". The property will
-be a unicode string by default if no type is specified. The properties
-are loaded into a dictionary called ".properties" on the appropriate
-Image, Tile, Map and Cell instance.
+be a unicode string by default if no type is specified.
+
+Properties are accessed on the map, cell or tile using common dict operations
+with some extensions. Accessing a property on a **cell** will fall back to look
+on the **tile** if it's not found on the cell.
+
+If a cell has a property ``player-spawn`` (boolean) and the tile that the cell
+uses has a property ``move-cost=1`` (int) then the following are true::
+
+    'player-spawn' in cell == True
+    cell.get('player-spawn') == True
+    cell['player-spawn'] == True
+
+    'player-spawn' in tile == False
+    tile.get('player-spawn') == None
+    tile['player-spawn'] --> raises KeyError
+
+    cell['move-cost'] == 1
+
+You may additionally set properties on cells and tiles::
+
+    cell['player-postion'] = True
+    cell['burnt-out'] = True
+
+and when the map is exported to XML these properties will also be exported.
+
+
+Controlling Map Scrolling
+-------------------------
+
+You have three options for map scrolling:
+
+1. never automatically scroll the map,
+2. automatically scroll the map but stop at the map edges, and
+3. scroll the map an allow the edge of the map to be displayed.
+
+The first is possibly the easiest since you don't need to use a
+ScrollingManager layer. You simple call map.set_view(x, y, w, h) on your
+map layer giving the bottom-left corner coordinates and the dimensions
+to display. This could be as simple as::
+
+   map.set_view(0, 0, map.px_width, map.px_height)
+
+If you wish to have the map scroll around in response to player
+movement the ScrollingManager may be used. It has a concept of "focus"
+which is the pixel position of the player's view focus (*usually* the
+center of the player sprite itself, but the player may be allowed to
+move the view around, or you may move it around for them to highlight
+something else in the map). The ScrollingManager is clever enough to
+manage many layers of map imagery and handle scaling them.
+
+Two methods are available for setting the map focus:
+
+**set_focus(x, y)**
+  Attempt to set the focus to the pixel coordinates given. The map layer(s)
+  contained in the ScrollingManager are moved accordingly. If a layer
+  would be moved outside of its define px_width, px_height then the
+  scrolling is restricted. The resultant restricted focal point is stored
+  on the ScrollingManager as manager.fx and manager.fy.
+
+**force_focus(x, y)**
+  Force setting the focus to the pixel coordinates given. The map layer(s)
+  contained in the ScrollingManager are moved accordingly regardless of
+  whether any out-of-bounds cells would be displayed. The .fx and .fy
+  attributes are still set, but they'll *always* be set to the supplied
+  x and y values.
 '''
 
 __docformat__ = 'restructuredtext'
@@ -260,7 +318,7 @@ class Resource(object):
 
     def findall(self, cls, ns=''):
         '''Find all elements of the given class in this resource and all
-        <require>'ed resources.
+        <requires>'ed resources.
         '''
         for k in self.contents:
             if isinstance(self.contents[k], cls):
@@ -282,6 +340,7 @@ class Resource(object):
         '''
         # generate the XML
         root = ElementTree.Element('resource')
+        root.tail = '\n'
         for namespace, res in self.requires:
             r = ElementTree.SubElement(root, 'requires', file=res.filename)
             r.tail = '\n'
@@ -341,7 +400,7 @@ _xml_type = {
 }
 def _handle_properties(tag):
     properties = {}
-    for tag in tag.getiterator('property'):
+    for tag in tag.findall('./property'):
         name = tag.get('name')
         type = tag.get('type') or 'unicode'
         value = tag.get('value')
@@ -495,7 +554,8 @@ def rectmap_factory(resource, tag):
             properties = _handle_properties(cell)
             c.append(RectCell(i, j, width, height, properties, tile))
 
-    m = RectMapLayer(id, width, height, cells, origin)
+    properties = _handle_properties(tag)
+    m = RectMapLayer(id, width, height, cells, origin, properties)
     resource.add_resource(id, m)
 
     return m
@@ -521,7 +581,8 @@ def hexmap_factory(resource, tag):
             properties = _handle_properties(tag)
             c.append(HexCell(i, j, height, properties, tile))
 
-    m = HexMapLayer(id, width, cells, origin)
+    properties = _handle_properties(tag)
+    m = HexMapLayer(id, width, cells, origin, properties)
     resource.add_resource(id, m)
 
     return m
@@ -545,6 +606,10 @@ class ScrollableLayer(cocos.layer.Layer):
 
     def __init__(self):
         super(ScrollableLayer,self).__init__()
+        # force transform anchor to be 0 so we don't OpenGL glTranslate()
+        # and screw up our pixel alignment on screen
+        self.transform_anchor_x = 0
+        self.transform_anchor_y = 0
         self.batch = pyglet.graphics.Batch()
 
     def set_view(self, x, y, w, h):
@@ -577,13 +642,29 @@ class MapLayer(ScrollableLayer):
         (origin_x, origin_y, origin_z)  -- offset of map top left from origin in pixels
         cells           -- array [i][j] of Cell instances
         debug           -- display debugging information on cells
+        properties      -- arbitrary properties
 
     The debug flag turns on textual display of data about each visible cell
     including its cell index, origin pixel and any properties set on the cell.
     '''
-    def __init__(self):
+    def __init__(self, properties):
         self._sprites = {}
+        self.properties = properties
         super(MapLayer, self).__init__()
+
+    def __contains__(self, key):
+        return key in self.properties
+
+    def __getitem__(self, key):
+        if key in self.properties:
+            return self.properties[key]
+        raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        self.properties[key] = value
+
+    def get(self, key, default=None):
+        return self.properties.get(key, default)
 
     def set_dirty(self):
         # re-calculate the sprites to draw for the view
@@ -607,10 +688,31 @@ class MapLayer(ScrollableLayer):
         w, h = self.view_w, self.view_h
         return self.get_in_region(x, y, x + w, y + h)
 
+    def is_visible(self, rect):
+        '''Determine whether the indicated rect (with .x, .y, .width and
+        .height attributes) located in this Layer is visible.
+        '''
+        x, y = rect.x, rect.y
+        if x + rect.width < self.view_x: return False
+        if y + rect.height < self.view_y: return False
+        if x > self.view_x + self.view_w: return False
+        if y > self.view_y + self.view_h: return False
+        return True
+
     debug = False
     def set_debug(self, debug):
         self.debug = debug
         self._update_sprite_set()
+
+    def set_cell_opacity(self, i, j, opacity):
+        key = self.cells[i][j].origin[:2]
+        if key in self._sprites:
+            self._sprites[key].opacity = opacity
+
+    def set_cell_color(self, i, j, color):
+        key = self.cells[i][j].origin[:2]
+        if key in self._sprites:
+            self._sprites[key].color = color
 
     def _update_sprite_set(self):
         # update the sprites set
@@ -618,7 +720,9 @@ class MapLayer(ScrollableLayer):
         for cell in self.get_visible_cells():
             cx, cy = key = cell.origin[:2]
             keep.add(key)
-            if key not in self._sprites and cell.tile is not None:
+            if cell.tile is None:
+                continue
+            if key not in self._sprites:
                 self._sprites[key] = pyglet.sprite.Sprite(cell.tile.image,
                     x=cx, y=cy, batch=self.batch)
             s = self._sprites[key]
@@ -638,7 +742,7 @@ class MapLayer(ScrollableLayer):
             else:
                 s._label = None
         for k in list(self._sprites):
-            if k not in keep:
+            if k not in keep and k in self._sprites:
                 self._sprites[k]._label = None
                 del self._sprites[k]
 
@@ -669,8 +773,9 @@ class RectMapLayer(RegularTesselationMapLayer):
     Thus cells = [['a', 'd'], ['b', 'e'], ['c', 'f']]
     and cells[0][1] = 'd'
     '''
-    def __init__(self, id, tw, th, cells, origin=None):
-        super(RectMapLayer, self).__init__()
+    def __init__(self, id, tw, th, cells, origin=None, properties=None):
+        properties = properties or {}
+        super(RectMapLayer, self).__init__(properties)
         self.id = id
         self.tw, self.th = tw, th
         if origin is None:
@@ -725,6 +830,17 @@ class RectMapLayer(RegularTesselationMapLayer):
         m = ElementTree.SubElement(root, 'rectmap', id=self.id,
             tile_size='%dx%d'%(self.tw, self.th),
             origin='%s,%s,%s'%(self.origin_x, self.origin_y, self.origin_z))
+        m.tail = '\n'
+
+        # map properties
+        for k in self.properties:
+            v = self.properties[k]
+            v = _python_to_xml[type(v)](v)
+            p = ElementTree.SubElement(m, 'property', name=k, value=v,
+                type=_xml_type[type(v)])
+            p.tail = '\n'
+
+        # columns / cells
         for column in self.cells:
             c = ElementTree.SubElement(m, 'column')
             c.tail = '\n'
@@ -737,15 +853,31 @@ class Cell(object):
 
     Common attributes:
         i, j            -- index of this cell in the map
+        position        -- the above as a tuple
         width, height   -- dimensions
         properties      -- arbitrary properties
         cell            -- cell from the MapLayer's cells
+
+
+    Properties are available through the dictionary interface, ie. if the
+    cell has a property 'cost' then you may access it as:
+
+        cell['cost']
+
+    You may also set properties in this way and use the .get() method to
+    supply a default value.
+
+    If the named property does not exist on the cell it will be looked up
+    on the cell's tile.
     '''
     def __init__(self, i, j, width, height, properties, tile):
         self.width, self.height = width, height
         self.i, self.j = i, j
         self.properties = properties
         self.tile = tile
+
+    @property
+    def position(self): return (self.i, self.j)
 
     def _as_xml(self, parent):
         c = ElementTree.SubElement(parent, 'cell')
@@ -755,8 +887,30 @@ class Cell(object):
         for k in self.properties:
             v = self.properties[k]
             v = _python_to_xml[type(v)](v)
-            ElementTree.SubElement(c, 'property', value=v,
+            ElementTree.SubElement(c, 'property', name=k, value=v,
                 type=_xml_type[type(v)])
+
+    def __contains__(self, key):
+        if key in self.properties:
+            return True
+        return key in self.tile.properties
+
+    def __getitem__(self, key):
+        if key in self.properties:
+            return self.properties[key]
+        elif self.tile is not None and key in self.tile.properties:
+            return self.tile.properties[key]
+        raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        self.properties[key] = value
+
+    def get(self, key, default=None):
+        if key in self.properties:
+            return self.properties[key]
+        if self.tile is None:
+            return default
+        return self.tile.properties.get(key, default)
 
     def __repr__(self):
         return '<%s object at 0x%x (%g, %g) properties=%r tile=%r>'%(
@@ -885,8 +1039,9 @@ class HexMapLayer(RegularTesselationMapLayer):
         \_/ \_/
     has cells = [['a', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h']]
     '''
-    def __init__(self, id, th, cells, origin=None):
-        super(HexMapLayer, self).__init__()
+    def __init__(self, id, th, cells, origin=None, properties=None):
+        properties = properties or {}
+        super(HexMapLayer, self).__init__(properties)
         self.id = id
         self.th = th
         if origin is None:
@@ -1164,7 +1319,9 @@ class ScrollingManager(cocos.layer.Layer):
         '''Add the child and then update the manager's focus / viewport.
         '''
         super(ScrollingManager, self).add(child, z=z, name=name)
-        self.set_focus(self.fx, self.fy)
+        # set the focus again and force it so we don't just skip because the
+        # focal point hasn't changed
+        self.set_focus(self.fx, self.fy, force=True)
 
     def pixel_from_screen(self, x, y):
         '''Look up the Layer-space pixel matching the screen-space pixel.
@@ -1208,7 +1365,7 @@ class ScrollingManager(cocos.layer.Layer):
         return int(x), int(y)
 
     _old_focus = None
-    def set_focus(self, fx, fy):
+    def set_focus(self, fx, fy, force=False):
         '''Determine the viewport based on a desired focus pixel in the
         Layer space (fx, fy) and honoring any bounding restrictions of
         child layers.
@@ -1230,7 +1387,7 @@ class ScrollingManager(cocos.layer.Layer):
         a = (fx, fy, self.scale)
 
         # check for NOOP (same arg passed in)
-        if self._old_focus == a:
+        if not force and self._old_focus == a:
             return
         self._old_focus = a
 

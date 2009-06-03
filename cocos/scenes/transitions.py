@@ -91,6 +91,13 @@ class TransitionScene(scene.Scene):
         self.in_scene = dst                     #: scene that will replace the old one
         if src == None:
             src = director.scene
+
+            # if the director is already running a transition scene then terminate
+            # it so we may move on
+            if isinstance(src, TransitionScene):
+                src.finish()
+                src = src.in_scene
+
         self.out_scene = src                    #: scene that will be replaced
         self.duration = duration                #: duration in seconds of the transition
         if not self.duration:
@@ -99,7 +106,7 @@ class TransitionScene(scene.Scene):
         if self.out_scene is None:
             raise Exception("You need to specfy a `src` argument")
 
-        if id(self.out_scene) == id(self.in_scene):
+        if self.out_scene is self.in_scene:
             raise Exception("Incoming scene must be different from outgoing scene")
 
         self.start()
@@ -509,15 +516,18 @@ class TurnOffTilesTransition(TransitionScene):
 
 
 class FadeTransition(TransitionScene):
-    '''Fade out the outgoing scene and then fade in the incoming scene.'''
+    '''Fade out the outgoing scene and then fade in the incoming scene.
+    
+    Optionally supply the color to fade to in-between as an RGB color tuple.
+    '''
     def __init__( self, *args, **kwargs ):
+        color = kwargs.pop('color', (0, 0, 0)) + (0,)
         super(FadeTransition, self ).__init__( *args, **kwargs)
 
-        self.fadelayer = ColorLayer(0,0,0,0)
+        self.fadelayer = ColorLayer(*color)
 
         self.in_scene.visible = False
         self.add( self.fadelayer, z=2 )
-
 
     def on_enter( self ):
         super( FadeTransition, self).on_enter()

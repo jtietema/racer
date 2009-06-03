@@ -49,6 +49,10 @@ class Label(cocos.text.Label):
     def _set_text(self, txt):
         self.element._document.text = txt
     text    = property(lambda self: self.element._document.text, _set_text)
+    
+    def _set_color(self, color):
+        self.element.color = color
+    color = property(lambda self: self.element.color, _set_color)
 
 
 def collide_single((x,y), objects):

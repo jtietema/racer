@@ -78,53 +78,55 @@ class Shop(Scene):
 class Frame(Layer):
     """Abstract frame view for usage inside the shop."""
 
-    def __init__(self, (width, height), border_width=5,
+    def __init__(self, (width, height), border_width=5, padding=5,
         border_color=(255, 255, 255, 255), content_bg_color=(0, 0, 0, 255),
         *args, **kwargs):
 
         super(Frame, self).__init__()
+        
+        self.padding = padding
 
         self.border_layer = ColorLayer(*(border_color + (width, height)))
         self.add(self.border_layer, z=-2)
 
-        content_size = (width - border_width * 4, height - border_width * 4)
-        self.content_layer = ColorLayer(*(content_bg_color + content_size))
-        self.content_layer.position = (border_width, border_width)
-        self.content_layer.children_anchor = (border_width, border_width)
-        self.add(self.content_layer, z=-1)
+        content_bg_size = (width - border_width * 2, height - border_width * 2)
+        content_bg = ColorLayer(*(content_bg_color + content_bg_size))
+        content_bg.position = (border_width, border_width)
+        self.add(content_bg, z=-1)
+        
+        self.content_layer = Layer()
+        self.content_layer.width = content_bg_size[0] - padding * 2
+        self.content_layer.height = content_bg_size[1] - padding * 2
+        self.content_layer.position = (padding, padding)
+        content_bg.add(self.content_layer)
     
     size = property(lambda self: (self.width, self.height))
+    
+    content_size = property(lambda self: (self.content_layer.width,
+        self.content_layer.height))
 
 
 class SpinnerFrame(Frame):
     """Abstract specialized frame to display layers in several groups, with
        group navigation at the top."""
 
-    def __init__(self, size, group_titles, layers, *args, **kwargs):
+    def __init__(self, size, *args, **kwargs):
         super(SpinnerFrame, self).__init__(size, *args, **kwargs)
-
-        assert len(group_titles) == len(layers)
-
-        self.current_index = 0
-        self.group_titles = group_titles
-
-        # Add the different layers inside a MultiplexLayer, so we can easily
-        # and quickly switch between them.
-        self.layers = MultiplexLayer(*layers)
-        self.content_layer.add(self.layers)
+        
+        self.group_titles = None
+        self.layers = None
 
         # Build the navigation panel.
-        nav_y = self.content_layer.height - 40
         button_size = (35, 35)
         button_options = {'font_size': 16, 'bold': True}
+        nav_y = self.content_layer.height - button_size[1]
 
-        left_x = 5
         prev_button = LabelButton('<', button_size, **button_options)
-        prev_button.position = (left_x, nav_y)
+        prev_button.position = (0, nav_y)
         prev_button.on_click(self.previous_group)
         self.content_layer.add(prev_button)
 
-        right_x = self.content_layer.width - 40
+        right_x = self.content_layer.width - button_size[0]
         next_button = LabelButton('>', button_size, **button_options)
         next_button.position = (right_x, nav_y)
         next_button.on_click(self.next_group)
@@ -132,11 +134,25 @@ class SpinnerFrame(Frame):
 
         center_x = self.content_layer.width / 2
         center_y = nav_y + 15
-        group_text = self.group_titles[self.current_index]
-        self.group_label = util.Label(group_text, x=center_x, y=center_y,
+        self.group_label = util.Label('', x=center_x, y=center_y,
             width=self.content_layer.width, anchor_x='center',
             anchor_y='center', font_size=16)
         self.content_layer.add(self.group_label)
+    
+    def set_groups(self, group_titles, layers):
+        assert len(group_titles) == len(layers)
+        
+        self.current_index = 0
+        self.group_titles = group_titles
+
+        # Add the different layers inside a MultiplexLayer, so we can easily
+        # and quickly switch between them.
+        if self.layers is not None:
+            self.content_layer.remove(self.layers)
+        self.layers = MultiplexLayer(*layers)
+        self.content_layer.add(self.layers)
+        
+        self.group_label.text = self.group_titles[self.current_index]
 
     def switch_group(self, step):
         index = abs((self.current_index + step) % len(self.group_titles))
@@ -153,10 +169,10 @@ class SpinnerFrame(Frame):
         self.switch_group(1)
     
     # TODO: dynamic
-    navbar_size = property(lambda self: (self.content_layer.width, 40))
+    navbar_size = property(lambda self: (self.content_layer.width, 35))
     def _get_content_size(self):
         return (self.content_layer.width,
-            self.content_layer.height - self.navbar_size[1])
+            self.content_layer.height - self.navbar_size[1] - self.padding)
     content_size = property(_get_content_size,
         doc="""Returns the size of the actual content area, the area of the
                frame below the navigation elements.""")
@@ -184,19 +200,18 @@ class PreviewFrame(Frame):
         self.content_layer.add(self.car)
         
         # Add car property bars.
-        label_x = 10
-        bar_x = 150
-        bar_y = self.content_layer.height - 25
-        size = (225, 20)
+        bar_size = (240, 20)
+        bar_x = 140
+        bar_y = self.content_layer.height - bar_size[1]
         for bar_type in ('speed','grip','acceleration'):
             # Label
             label_text = capwords(bar_type)
             label = util.Label(label_text, font_size=12)
-            label.position = (label_x, bar_y + 4)
+            label.position = (5, bar_y + 4)
             self.content_layer.add(label)
             
             # Bar
-            bar = Bar(size)
+            bar = Bar(bar_size)
             bar.position = (bar_x, bar_y)
             self.content_layer.add(bar, name=bar_type)
             
@@ -213,34 +228,35 @@ class PartsFrame(SpinnerFrame):
         x = director.window.width - width - 10
         y = director.window.height - height - 10
         
-        group_titles = []
-        layers = []
+        super(PartsFrame, self).__init__((width, height))
+        
+        self.position = (x, y)
         
         self.car = car
+        
+        # Set up the layers.
+        group_titles = []
+        layers = []
         
         # Keep track of the highlighted button per group.
         self.highlighted_buttons = {}
         
         # Body layer        
         group_titles.append('Body')
-        layers.append(self.create_parts_layer('body', width, height))
+        layers.append(self.create_parts_layer('body'))
         
         # Engines layer
         group_titles.append('Engine')
-        layers.append(self.create_parts_layer('engine', width, height))
+        layers.append(self.create_parts_layer('engine'))
         
         # Tyres layer
         group_titles.append('Tyres')
-        layers.append(self.create_parts_layer('tyres', width, height))
+        layers.append(self.create_parts_layer('tyres'))
         
-        super(PartsFrame, self).__init__((width, height), group_titles,
-            layers)
-        
-        self.position = (x, y)
+        self.set_groups(group_titles, layers)
     
-    def create_parts_layer(self, group_name, width, height):
-        layer = GridLayer((width - 26, height - 80), 3, 4, padding=2)
-        layer.position = (3, 3)
+    def create_parts_layer(self, group_name):
+        layer = GridLayer(self.content_size, 3, 4, spacing=4)
         button_size = (layer.column_width, layer.row_height)
         for part_id, properties in parts.options[group_name].items():
             button = PartButton(properties.get('image'), properties['name'],
@@ -275,7 +291,8 @@ class BalanceLayer(Layer):
         super(BalanceLayer, self).__init__()
         
         x = 10
-        real_x = x + 20
+        minus_x = x + 80
+        real_x = x + 100
         
         self.position = (x, 10)
         self.width = 400
@@ -283,37 +300,69 @@ class BalanceLayer(Layer):
         
         self.car = car
         
+        # Heading
         heading = util.Label('Balance', font_size=18, x=x)
         heading.y = self.height - heading.height
         self.add(heading)
         
+        # Current money
         y = heading.y - 30
+        
+        money_label = util.Label('Money:', x=x, y=y, font_size=12, width=100)
+        self.add(money_label)
         
         money = util.Label(str(state.profile.money), x=real_x, y=y, font_size=14,
             width=self.width, halign='right')
         self.add(money)
         
+        # Cost
         y -= 20
         
+        cost_label_label = util.Label('Cost:', x=x, y=y, font_size=12, width=100)
+        self.add(cost_label_label)
+        
         self.cost_label = util.Label('0', x=real_x, y=y, font_size=14,
-            halign='right')
+            width=self.width, halign='right')
         self.add(self.cost_label)
         
-        minus_label = util.Label('-', x=x, y=y, font_size=14, halign='left')
-        self.add(minus_label)
+        # Separator line
+        y -= 15
+        line = cocos.draw.Line((x, y), (self.width - 10, y),
+            (255, 255, 255, 255))
+        self.add(line)
         
-        y -= 30
+        # Balance after purchase
+        y -= 25
+        
+        balance_label_label = util.Label('Balance:', x=x, y=y,
+            width=100, font_size=12)
+        self.add(balance_label_label)
         
         self.balance_label = util.Label(str(state.profile.money), x=real_x, y=y,
-            font_size=14, halign='right')
+            width=self.width, font_size=14, halign='right')
         self.add(self.balance_label)
+        
+        self.balance_minus_label = util.Label('-', x=minus_x, y=y, font_size=14,
+            halign='left', color=(255, 0, 0, 255))
         
     def set_cost(self, cost):
         """Sets the cost of the combined purchases. Updates the cost label
            as well as the balance after purchase label."""
         new_balance = state.profile.money - cost
         self.cost_label.text = str(cost)
-        self.balance_label.text = str(new_balance)
+        self.balance_label.text = str(abs(new_balance))
+        
+        contains_minus = self.balance_minus_label in self
+        if new_balance < 0:
+            if not contains_minus:
+                self.add(self.balance_minus_label)
+            
+            self.balance_label.color = (255, 0, 0, 255)
+        else:
+            if contains_minus:
+                self.remove(self.balance_minus_label)
+            
+            self.balance_label.color = (255, 255, 255, 255)            
     
     def update(self):
         """Updates the layer based on the car's state."""
@@ -422,30 +471,26 @@ class GridLayer(LayoutLayer):
        top to bottom, left to right.
        
        If too many items are added, a RuntimeError is raised."""
-    def __init__(self, size, rows, columns, padding=0):
+    def __init__(self, size, rows, columns, spacing=0):
         super(GridLayer, self).__init__(size)
         
         self.rows = rows
         self.columns = columns
         
-        self.padding = padding
-    
-        self.row_height_full = self.height // rows
-        self.column_width_full = self.width // columns
+        self.spacing = spacing
         
-        self.row_height = self.row_height_full - self.padding * 2
-        self.column_width = self.column_width_full - self.padding * 2
+        self.row_height = (self.height - ((rows - 1) * self.spacing)) // rows
+        self.column_width = (self.width - ((columns - 1) * self.spacing)) // columns
     
     def reposition(self):
         col_count = 0
-        y = self.height - self.row_height_full
+        y = self.height - self.row_height
         for child in self.layout_children:
-            x = self.column_width_full * col_count + self.padding
-            this_y = max(y, y + self.row_height_full - child.height) + self.padding
-            child.position = (x, this_y)
+            x = (self.column_width + self.spacing) * col_count
+            child.position = (x, y)
             col_count = (col_count + 1) % self.columns
             if col_count == 0:
-                y -= self.row_height_full
+                y -= self.row_height + self.spacing
                 
                 if y < 0:
                     raise RuntimeError("Too many items added.")
@@ -525,6 +570,7 @@ class LabelButton(Button):
     def _set_enabled(self, enabled):
         self._enabled = enabled
         
+        # Bah.
         if hasattr(self, 'bg_layer'):
             if enabled:
                 self.bg_layer.opacity = self.enabled_opacity

@@ -95,7 +95,7 @@ class Sprite( BatchableNode, pyglet.sprite.Sprite):
 
 
         pyglet.sprite.Sprite.__init__(self, image)
-        cocosnode.CocosNode.__init__(self)
+        BatchableNode.__init__(self)
 
         if anchor is None:
             if isinstance(self.image, pyglet.image.Animation):
@@ -130,6 +130,19 @@ class Sprite( BatchableNode, pyglet.sprite.Sprite):
 
         #: color of the sprite in R,G,B format where 0,0,0 is black and 255,255,255 is white
         self.color = color
+
+
+    def contains(self, x, y):
+        '''Test whether this (untransformed) Sprite contains the pixel coordinates
+        given.
+        '''
+        sx, sy = self.position
+        ax, ay = self.image_anchor
+        sx -= ax
+        sy -= ay
+        if x < sx or x > sx + self.width: return False
+        if y < sy or y > sy + self.height: return False
+        return True
 
 
     def _set_anchor_x(self, value):

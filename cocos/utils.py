@@ -8,7 +8,7 @@
 #
 #   * Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright
+#   * Redistributions in binary form must reproduce the above copyright 
 #     notice, this list of conditions and the following disclaimer in
 #     the documentation and/or other materials provided with the
 #     distribution.
@@ -30,49 +30,37 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-'''cocos2d
-cocos2d is a framework for building 2D games, demos, and other graphical/interactive applications.
+# Ideas borrowed from:
+#    Artificial Ineptitude : http://www.pyweek.org/e/0AI/
+#
+"""Here are a bunch of utilities to use with cocos.
 
-Main Features:
---------------
-    * Flow control: Manage the flow control between different scenes in an easy way
-    * Sprites: Fast and easy sprites
-    * Actions: Just tell sprites what you want them to do. Composable actions like move, rotate, scale and much more
-    * Effects: Effects like waves, twirl, lens and much more
-    * Tiled Maps: Support for rectangular and hexagonal tiled maps
-    * Transitions: Move from scene to scene with style
-    * Menus: Built in classes to create menus
-    * Text Rendering: Label and HTMLLabel with action support
-    * Documentation: Programming Guide + API Reference + Video Tutorials + Lots of simple tests showing how to use it
-    * Built-in Python Interpreter: For debugging purposes
-    * BSD License: Just use it
-    * Pyglet Based: No external dependencies
-    * OpenGL Based: Hardware Acceleration
+utils
+=====
 
-http://cocos2d.org
-'''
+This module provides classes or functions that were useful to us while doing games.
+"""
 
-__version__ = "0.3.0"
-__author__ = "cocos2d team"
-version = __version__
+__docformat__ = 'restructuredtext'
+from cocos.layer import *
+from cocos.scene import Scene
+from cocos.director import director
 
+class SequenceScene(Scene):
+    """SequenceScene is used when you want to load more than one scene to the director.
+    Some easy example would be:
+    I want to run a Intro scene before the menu game. So I do this:
+    director.run( SequenceScene(intro(), menuGame()) )
+    """
+    def __init__(self, *scenes):
+        super(SequenceScene, self).__init__()
+        self.scenes = scenes
+        self.p = 0
 
+    def on_enter(self):
+        if self.p >= len(self.scenes):
+            director.pop()
+        else:
+            director.push( self.scenes[ self.p ] )
 
-# add the cocos resources path
-import os, pyglet
-pyglet.resource.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources"))
-pyglet.resource.reindex()
-del os, pyglet
-
-import actions
-import director
-import layer
-import menu
-import sprite
-import path
-import scene
-import grid
-import text
-import camera
-import draw
-import skeleton
+        self.p += 1
