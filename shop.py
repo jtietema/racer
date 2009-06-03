@@ -255,30 +255,31 @@ class PartsFrame(SpinnerFrame):
         
         self.set_groups(group_titles, layers)
     
-    def create_parts_layer(self, group_name):
+    def create_parts_layer(self, part_type):
         layer = GridLayer(self.content_size, 3, 4, spacing=4)
         button_size = (layer.column_width, layer.row_height)
-        for part_id, properties in parts.options[group_name].items():
-            button = PartButton(properties.get('image'), properties['name'],
-                properties['price'], button_size)
+        for part in parts.manager.get_parts_by_type(part_type):                
+            button = PartButton(part.image, part.name,
+                part.price, button_size)
 
-            button.on_click(util.curry(self.select_part, group_name,
-                part_id))
+            button.on_click(util.curry(self.select_part, part_type,
+                part))
 
-            if part_id == getattr(self.car, group_name):
-                self.highlighted_buttons[group_name] = button
+            if part == getattr(self.car, part_type):
+                self.highlighted_buttons[part_type] = button
+                button.add(ColorLayer(50, 50, 50, 100, *button_size), z=-1)
                 button.highlight()
 
             layer.add(button)
             
         return layer
     
-    def select_part(self, group, part_id, button):
-        self.highlighted_buttons[group].unhighlight()
+    def select_part(self, part_type, part_id, button):
+        self.highlighted_buttons[part_type].unhighlight()
         button.highlight()
-        self.highlighted_buttons[group] = button
+        self.highlighted_buttons[part_type] = button
         
-        setattr(self.car, group, part_id)
+        setattr(self.car, part_type, part_id)
         
         self.parent.update()
 
@@ -348,10 +349,10 @@ class BalanceLayer(Layer):
     def set_cost(self, cost):
         """Sets the cost of the combined purchases. Updates the cost label
            as well as the balance after purchase label."""
-        new_balance = state.profile.money - cost
         self.cost_label.text = str(cost)
-        self.balance_label.text = str(abs(new_balance))
+        new_balance = self.new_balance
         
+        self.balance_label.text = str(abs(new_balance))
         contains_minus = self.balance_minus_label in self
         if new_balance < 0:
             if not contains_minus:
@@ -366,7 +367,15 @@ class BalanceLayer(Layer):
     
     def update(self):
         """Updates the layer based on the car's state."""
-        self.set_cost(self.car.cost)
+        current_car = state.profile.car
+        cost = 0
+        for part_type, part in self.car.parts.items():
+            # Only add the price of the item if the player does not own the
+            # part currently.
+            if not getattr(current_car, part_type) == part:
+                cost += part.price
+        
+        self.set_cost(cost)
     
     new_balance = property(lambda self: state.profile.money - int(self.cost_label.text),
         doc="""Returns the new balance for the player after the combined
@@ -582,17 +591,18 @@ class LabelButton(Button):
 class PartButton(Button):
     HIGHLIGHT_BG_COLOR = (50, 50, 50, 255)
     
-    def __init__(self, image, caption, price, (width, height)):
+    def __init__(self, image, caption, price, (width, height),
+        price_color=(255,) * 4, name_color=(255,) * 4):
         super(PartButton, self).__init__((width, height))
         
         center_x = self.width / 2
         label_top_margin = 10
         
-        price_label = util.Label(str(price), color=(255,) * 4, anchor_x='center',
+        price_label = util.Label(str(price), color=price_color, anchor_x='center',
            anchor_y='bottom', x=center_x, y=0)
         self.add(price_label, z=1) 
         
-        name_label = util.Label(caption, color=(255,) * 4, anchor_x='center',
+        name_label = util.Label(caption, color=name_color, anchor_x='center',
            anchor_y='bottom', x=center_x, y=price_label.height + 3)
         self.add(name_label, z=1)
         

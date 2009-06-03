@@ -21,6 +21,7 @@
 import math
 import os
 from random import randint
+import copy
 
 from cocos.draw import Line
 from cocos.cocosnode import CocosNode
@@ -80,9 +81,15 @@ class Car(CocosNode):
     @classmethod
     def get_default(cls):
         """Returns an instance of Car with default configuration."""
-        return cls(body='fellali', engine='basic', tyres='second_hand')
+        return cls(
+            body='fellali',
+            engine='basic',
+            tyres='second_hand'
+        )
     
     def __init__(self, **kwargs):
+        """Parts should be specified as string identifiers. They will be
+           looked up in the part manager at initialization."""
         CocosNode.__init__(self)
         
         # defaults
@@ -90,10 +97,11 @@ class Car(CocosNode):
         self.height = 100
         
         # Set the car's parts.
-        for group in parts.options.keys():
+        for part_type in parts.CLASSES.keys():
             # We use the special add-methods because we don't want to set
             # the part dependant types again. for every part the first time.
-            getattr(self, '_add_' + group)(kwargs[group])
+            part = parts.manager.get_part_by_id(part_type, kwargs[part_type])
+            getattr(self, '_add_' + part_type)(part)
         
         # Set the part dependant parts only once.
         self.set_part_dependant_properties()
@@ -268,61 +276,55 @@ class Car(CocosNode):
         self.accel_dir = -1
         self.stopping = True
     
-    mass    = property(lambda self: self.body_properties['mass'])
-    power   = property(lambda self: self.engine_properties['power'])
-    grip    = property(lambda self: self.tyres_properties['grip'])
+    mass    = property(lambda self: self.body.mass)
+    power   = property(lambda self: self.engine.power)
+    grip    = property(lambda self: self.tyres.grip)
     
-    def _add_engine(self, engine_name):
-        self.engine_name = engine_name
-    def _set_engine(self, engine_name):
-        self._add_engine(engine_name)
+    def _add_engine(self, engine):
+        self._engine = engine
+    def _set_engine(self, engine):
+        self._add_engine(engine)
         self.set_part_dependant_properties()
-    engine = property(lambda self: self.engine_name, _set_engine)
-    engine_properties = property(lambda self: parts.engine[self.engine_name])
+    engine = property(lambda self: self._engine, _set_engine)
     
-    def _add_body(self, body_name):
-        self.body_name = body_name
-        image_file = parts.body[self.body_name]['image']
-        self.add(Sprite(image_file), name='body', z=10)
+    def _add_body(self, body):
+        self._body = body
+        self.add(body.sprite, name='body', z=10)
     def _set_body(self, body_name):
         self.try_remove('body')
         self._add_body(body_name)
         self.set_part_dependant_properties()
         self.align_tyres()
-    body = property(lambda self: self.body_name, _set_body)
-    body_properties = property(lambda self: parts.body[self.body_name],
-        doc='Returns the properties of the tyres, as defined in the parts config.')
+    body = property(lambda self: self._body, _set_body)
     
-    def _add_tyres(self, tyres_name):
-        self.tyres_name = tyres_name
-        image = parts.tyres[self.tyres_name]['image']
+    def _add_tyres(self, tyres):
+        self._tyres = tyres
         for tyre_name in TYRE_NAMES:
-            self.add(Sprite(image), name=tyre_name, z=9)
+            # Note ...
+            self.add(Sprite(tyres.image), name=tyre_name, z=9)
     def _set_tyres(self, tyres_name):
         for tyre_name in TYRE_NAMES:
             self.try_remove(tyre_name)
         self._add_tyres(tyres_name)
         self.set_part_dependant_properties()
         self.align_tyres()
-    tyres = property(lambda self: self.tyres_name, _set_tyres)
-    tyres_properties = property(lambda self: parts.tyres[self.tyres_name],
-        doc='Returns the properties of the tyres, as defined in the parts config.')
+    tyres = property(lambda self: self._tyres, _set_tyres)
     front_tyres = property(lambda self: (self.get('tyre_fl'), self.get('tyre_fr')),
         doc='Returns the top two tyre Sprites.')
     back_tyres = property(lambda self: (self.get('tyre_bl'), self.get('tyre_br')),
         doc='Returns the bottom two tyre Sprites.')
     
-    def _get_part_properties(self):
+    def _get_parts(self):
         result = {}
-        for group in parts.options:
-            result[group] = getattr(self, group + '_properties')
+        for part_type in parts.CLASSES:
+            result[part_type] = getattr(self, part_type)
         return result
-    part_properties = property(_get_part_properties)
+    parts = property(_get_parts)
     
     def _get_cost(self):
         cost = 0
-        for properties in self.part_properties.values():
-            cost += properties['price']
+        for part in self.parts.values():
+            cost += part.price
         return cost
     cost = property(_get_cost)
     
@@ -336,8 +338,8 @@ class Car(CocosNode):
             # bottom.
             fb = tyre_name[-2]
             
-            x = self.body_properties['tyres_' + fb + 'x_offset']
-            y = self.body_properties['tyres_' + fb + 'y_offset']
+            x = getattr(self.body, 'tyres_' + fb + 'x_offset')
+            y = getattr(self.body, 'tyres_' + fb + 'y_offset')
             
             # If the tyre is to be aligned on the left, flip the x offset.
             if tyre_name[-1] == 'l':
