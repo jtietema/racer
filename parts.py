@@ -104,6 +104,9 @@ class Part(object):
         # Compare the part by id by default.
         return self.part_id == other.part_id
     
+    def __repr__(self):
+        return self.part_id
+    
     def _get_sprite(self):
         if self._sprite is None:    
             if self.image is None:
