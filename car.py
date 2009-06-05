@@ -87,6 +87,9 @@ class Car(CocosNode):
             tyres='second_hand'
         )
     
+    def __copy__(self):
+        return self.__class__(**self.parts)
+    
     def __init__(self, **kwargs):
         """Parts should be specified as string identifiers. They will be
            looked up in the part manager at initialization."""
@@ -100,7 +103,9 @@ class Car(CocosNode):
         for part_type in parts.CLASSES.keys():
             # We use the special add-methods because we don't want to set
             # the part dependant types again. for every part the first time.
-            part = parts.manager.get_part_by_id(part_type, kwargs[part_type])
+            part = kwargs[part_type]
+            if isinstance(part, str):
+                part = parts.manager.get_part_by_id(part_type, part)
             getattr(self, '_add_' + part_type)(part)
         
         # Set the part dependant parts only once.
@@ -313,6 +318,9 @@ class Car(CocosNode):
         doc='Returns the top two tyre Sprites.')
     back_tyres = property(lambda self: (self.get('tyre_bl'), self.get('tyre_br')),
         doc='Returns the bottom two tyre Sprites.')
+        
+    def has_same_configuration_as(self, other):
+        return self.parts == other.parts 
     
     def _get_parts(self):
         result = {}

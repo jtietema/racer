@@ -46,23 +46,30 @@ class Shop(Scene):
         # Copy original car to calculate price differences.
         self.car = copy.copy(state.profile.car)
         
-        self.balance_layer = BalanceLayer(self.car)
-        self.button_layer = ButtonLayer()
-        self.preview_layer = PreviewFrame(self.car)
+        self.sub_layers = {
+            'preview':  PreviewFrame(self.car),
+            'parts':    PartsFrame(self.car),
+            'balance':  BalanceLayer(self.car),
+            'button':   ButtonLayer(self.car)
+        }
         
-        self.add(self.preview_layer)
-        self.add(PartsFrame(self.car))
-        self.add(self.balance_layer)
-        self.add(self.button_layer)
+        for sub_layer in self.sub_layers.values():
+            self.add(sub_layer)
     
-    new_balance = property(lambda self: self.balance_layer.new_balance)
+    def reset(self):
+        self.car = copy.copy(state.profile.car)
+        
+        for sub_layer in self.sub_layers.values():
+            sub_layer.car = self.car
+            sub_layer.reset()
+    
+    new_balance = property(lambda self: self.sub_layers['balance'].new_balance)
     
     def update(self):
         # Note that the order is significant; button layer requests updated
         # data from balance layer.
-        self.balance_layer.update()
-        self.button_layer.update()
-        self.preview_layer.update()
+        for sub_layer in self.sub_layers.values():
+            sub_layer.update()
     
     def commit(self):
         """Commits the changes of the modified car to the profile."""
@@ -196,10 +203,7 @@ class PreviewFrame(Frame):
         self.car = car
         
         # Draw the car.
-        self.car.scale = 1
-        self.car.x = self.content_layer.width / 2
-        self.car.y = self.content_layer.height / 2 - 40
-        self.content_layer.add(self.car)
+        self.update_car()
         
         # Add car property bars.
         bar_size = (240, 20)
@@ -222,8 +226,24 @@ class PreviewFrame(Frame):
         self.update()
         
     def update(self):
+        # TODO: all properties
         for bar_type in ('grip',):
             self.content_layer.get(bar_type).fill_bar(getattr(self.car, bar_type))
+    
+    def update_car(self):
+        try:
+            self.content_layer.remove('car')
+        except Exception:
+            pass
+        
+        self.car.scale = 1
+        self.car.x = self.content_layer.width / 2
+        self.car.y = self.content_layer.height / 2 - 40
+        self.content_layer.add(self.car, name='car')
+    
+    def reset(self):
+        self.update_car()
+        self.update()        
 
 
 class PartsFrame(SpinnerFrame):
@@ -242,6 +262,8 @@ class PartsFrame(SpinnerFrame):
         
         self.car = car
         
+        self.part_types = ('body','engine','tyres')
+        
         # Set up the layers.
         group_titles = []
         layers = []
@@ -249,38 +271,45 @@ class PartsFrame(SpinnerFrame):
         # Keep track of the highlighted button per group.
         self.highlighted_buttons = {}
         
-        # Body layer
-        group_titles.append('Body')
-        layers.append(self.create_parts_layer('body'))
-        
-        # Engines layer
-        group_titles.append('Engine')
-        layers.append(self.create_parts_layer('engine'))
-        
-        # Tyres layer
-        group_titles.append('Tyres')
-        layers.append(self.create_parts_layer('tyres'))
+        for part_type in self.part_types:
+            group_titles.append(capwords(part_type))
+            layers.append(self.create_parts_layer(part_type))
         
         self.set_groups(group_titles, layers)
+        
+        self.set_initial_highlights()
     
     def create_parts_layer(self, part_type):
         layer = GridLayer(self.content_size, 3, 4, spacing=4)
         button_size = (layer.column_width, layer.row_height)
         for part in parts.manager.get_parts_by_type(part_type):                
-            button = PartButton(part.image, part.name,
-                part.price, button_size)
+            button = PartButton(part, button_size)
 
             button.on_click(util.curry(self.select_part, part_type,
                 part))
 
-            if part == getattr(self.car, part_type):
-                self.highlighted_buttons[part_type] = button
-                button.add(ColorLayer(50, 50, 50, 100, *button_size), z=-1)
-                button.highlight()
-
             layer.add(button)
             
         return layer
+    
+    def set_initial_highlights(self):
+        for index, layer in enumerate(self.layers.layers):
+            try:
+                layer.current_part_button.remove('current_bg')
+            except Exception:
+                pass
+            
+            part_type = self.part_types[index]
+            
+            for button in layer.layout_children:
+                button.unhighlight()
+                
+                if button.part == getattr(self.car, part_type):                    
+                    layer.current_part_button = button
+                    button.add(ColorLayer(50, 50, 50, 100, button.width,
+                        button.height), z=-1, name='current_bg')
+                    self.highlighted_buttons[part_type] = button
+                    button.highlight()
     
     def select_part(self, part_type, part_id, button):
         self.highlighted_buttons[part_type].unhighlight()
@@ -290,6 +319,12 @@ class PartsFrame(SpinnerFrame):
         setattr(self.car, part_type, part_id)
         
         self.parent.update()
+    
+    def update(self):
+        pass
+    
+    def reset(self):
+        self.set_initial_highlights()
 
 
 class BalanceLayer(Layer):
@@ -385,6 +420,9 @@ class BalanceLayer(Layer):
         
         self.set_cost(cost)
     
+    def reset(self):
+        self.set_cost(0)
+    
     new_balance = property(lambda self: state.profile.money - int(self.cost_label.text),
         doc="""Returns the new balance for the player after the combined
                purchases have been made. This is based on the value that was
@@ -392,8 +430,10 @@ class BalanceLayer(Layer):
 
 
 class ButtonLayer(Layer):
-    def __init__(self):
+    def __init__(self, car):
         super(ButtonLayer, self).__init__()
+        
+        self.car = car
         
         self.width = 598
         self.height = 230
@@ -405,22 +445,37 @@ class ButtonLayer(Layer):
         
         cancel_button = LabelButton('Cancel', button_size, bg_color=bg_color)
         cancel_button.position = (self.width - cancel_button.width, 0)
-        cancel_button.on_click(self.cancel)
+        cancel_button.on_click(self.on_cancel)
         self.add(cancel_button)
         
-        self.ok_button = LabelButton('Buy', button_size, bg_color=bg_color)
-        self.ok_button.position = (cancel_button.x - self.ok_button.width - 20, 0)
-        self.ok_button.on_click(self.ok)
+        self.reset_button = LabelButton('Reset', button_size, bg_color=bg_color,
+            enabled=False)
+        self.reset_button.position = (cancel_button.x - self.reset_button.width - 20, 0)
+        self.reset_button.on_click(self.on_reset)
+        self.add(self.reset_button)
+        
+        self.ok_button = LabelButton('Buy', button_size, bg_color=bg_color,
+            enabled=False)
+        self.ok_button.position = (self.reset_button.x - self.ok_button.width - 20, 0)
+        self.ok_button.on_click(self.on_ok)
         self.add(self.ok_button)
     
-    def ok(self, *args, **kwargs):
+    def on_ok(self, *args, **kwargs):
         self.parent.commit()
     
-    def cancel(self, *args, **kwargs):
+    def on_reset(self, *args, **kwargs):
+        self.parent.reset()
+    
+    def on_cancel(self, *args, **kwargs):
         self.parent.cancel()
     
+    def reset(self):
+        self.reset_button.enabled = False
+    
     def update(self):
-        self.ok_button.enabled = (self.parent.new_balance >= 0)
+        different_config = not self.car.has_same_configuration_as(state.profile.car)
+        self.ok_button.enabled = (self.parent.new_balance >= 0 and different_config)
+        self.reset_button.enabled = different_config
         
 
 class LayoutLayer(Layer):
@@ -440,8 +495,6 @@ class LayoutLayer(Layer):
         self.layout_children.append(child)
         self.reposition()
         
-        # TODO: modify child position here
-        
         return self # Don't break the chain.
     
     def _remove(self, child, *args, **kwargs):
@@ -449,8 +502,6 @@ class LayoutLayer(Layer):
         
         self.layout_children.remove(child)
         self.reposition()
-        
-        # TODO: modify other child positions here
         
         return self # Don't break the chain.
     
@@ -564,7 +615,7 @@ class Button(Layer):
 class LabelButton(Button):
     def __init__(self, caption, (width, height),
         bg_color=(150, 150, 150, 255), fg_color=(0, 0, 0, 255),
-        disabled_opacity=0.5, **kwargs):
+        disabled_opacity=0.5, enabled=True, **kwargs):
         """Initializes a new button. Any additional keyword arguments are
            propagated to the label that is rendered on the button,
            enabling you to alter the font properties of the text. See
@@ -574,6 +625,9 @@ class LabelButton(Button):
         self.disabled_opacity = int(bg_color[3] * disabled_opacity)
         
         super(LabelButton, self).__init__((width, height))
+        
+        if not enabled:
+            bg_color = bg_color[:3] + (self.disabled_opacity,)
 
         self.bg_layer = ColorLayer(*(bg_color + (width, height)))
         self.add(self.bg_layer, z=0)
@@ -593,30 +647,38 @@ class LabelButton(Button):
                 self.bg_layer.opacity = self.enabled_opacity
             else:
                 self.bg_layer.opacity = self.disabled_opacity
-    enabled = property(lambda self: self._enabled, _set_enabled)
+    enabled = property(lambda self: self._enabled, _set_enabled,
+        doc="""Disables any on_click callbacks and decreases the button's
+            background opacity to visualize it being enabled. Note that it is
+            impossible to change the enabled property on the
+            LabelButton before it is actually visible in a Scene. If you want
+            to set the button's initial state, use the 'enabled' keyword
+            argument in the init method.""")
 
 
 class PartButton(Button):
     HIGHLIGHT_BG_COLOR = (50, 50, 50, 255)
     
-    def __init__(self, image, caption, price, (width, height),
+    def __init__(self, part, (width, height),
         price_color=(255,) * 4, name_color=(255,) * 4):
         super(PartButton, self).__init__((width, height))
+        
+        self.part = part
         
         center_x = self.width / 2
         label_top_margin = 10
         
-        price_label = util.Label(str(price), color=price_color, anchor_x='center',
+        price_label = util.Label(str(part.price), color=price_color, anchor_x='center',
            anchor_y='bottom', x=center_x, y=0)
         self.add(price_label, z=1) 
         
-        name_label = util.Label(caption, color=name_color, anchor_x='center',
+        name_label = util.Label(part.name, color=name_color, anchor_x='center',
            anchor_y='bottom', x=center_x, y=price_label.height + 3)
         self.add(name_label, z=1)
         
         # Part image
-        if image is not None:
-            img = pyglet.image.load('img/' + image)
+        if part.image is not None:
+            img = pyglet.image.load('img/' + part.image)
         
             # The total height the label area of the button occupies.
             labels_height = name_label.element.y + name_label.height + label_top_margin
