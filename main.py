@@ -20,6 +20,7 @@ import os
 
 from cocos.director import director
 import pyglet
+import pymunk
 
 from menu import MenuScene
 from cups import Cup
@@ -29,8 +30,9 @@ from game_state import state
 director.init(width=1024, height=768, caption='RCr: Larry\'s Lawn')
 
 pyglet.resource.path = ['img', os.path.join('cups', 'garden')]
-#pyglet.resource.path = ['img']
 pyglet.resource.reindex()
+
+pymunk.init_pymunk()
 
 state.cup = Cup('garden')
 

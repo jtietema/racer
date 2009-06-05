@@ -26,16 +26,21 @@ from cocos.draw import Line
 from cocos.cocosnode import CocosNode
 from cocos.sprite import Sprite
 from cocos.director import director
+from cocos.particle import ParticleSystem, Color
+from cocos.euclid import Point2
+
 from pyglet.window import key
 import pyglet.resource
 import pyglet.media
-from cocos.particle import ParticleSystem, Color
-from cocos.euclid import Point2
+
+import pymunk
+from pymunk.vec2d import Vec2d
 
 import parts
 from util import signum
 from game_state import state
 import util
+from util import PymunkNode
 
 # Convenience constants.
 FORWARD = RIGHT = 1
@@ -76,14 +81,14 @@ COMPUTER_NAMES = [
 ENGINE_SOUND = pyglet.media.load(os.path.join('sound', 'engine.wav'), streaming=False)
 
 
-class Car(CocosNode):
+class Car(PymunkNode):
     @classmethod
     def get_default(cls):
         """Returns an instance of Car with default configuration."""
         return cls(body='fellali', engine='basic', tyres='second_hand')
     
     def __init__(self, **kwargs):
-        CocosNode.__init__(self)
+        PymunkNode.__init__(self)
         
         # defaults
         self.width = 100
@@ -107,6 +112,18 @@ class Car(CocosNode):
         
         self.reset()
         self.track = None
+        
+    def init_physics(self):
+        """Initializes all the physics models.
+        
+        Make sure you added the track before calling this function!!!
+        """
+        body = self.get('body')
+        verts = util.verts_img(body)
+        inertia = pymunk.moment_for_poly(self.mass, verts)
+        self.pm_body = pymunk.Body(self.mass, inertia)
+        self.pm_shape = pymunk.Poly(self.pm_body, verts)
+        self.track.space.add(self.pm_body, self.pm_shape)
     
     def init_sounds(self):
         self.engine_sound = pyglet.media.Player()
@@ -175,11 +192,14 @@ class Car(CocosNode):
     def update(self, dt):
         """Update the car's state."""
         friction = self.track.get_friction_at(self.position)
-        self.speed = self.calculate_speed(dt, friction)
+        #self.pm_body.friction = 1000 + friction  * 500.0
+        #print self.pm_body.friction
+        #self.speed = self.calculate_speed(dt, friction)
         
         rot_factor = min(1, abs(self.speed) / 200)
-        self.rotation = (self.rotation + (rot_factor * ROTATION_SPEED * self.rot_dir * signum(self.speed) * dt)) % 360
-        
+        #self.rotation = (self.rotation + (rot_factor * ROTATION_SPEED * self.rot_dir * signum(self.speed) * dt)) % 360
+        self.rotation = (self.rotation + (ROTATION_SPEED * self.rot_dir * dt)) % 360
+
         tyre_rotation = MAX_TYRE_ROTATION * self.rot_dir
         for tyre in self.front_tyres:
             tyre.rotation = tyre_rotation
@@ -192,14 +212,17 @@ class Car(CocosNode):
         self.engine_sound.volume = 0.1 + min(abs(self.speed) / 1000 * 0.2, 0.2)
         
         r = math.radians(self.rotation)
-        s = dt * self.speed
         
-        target_x = self.x + math.sin(r) * s
-        target_y = self.y + math.cos(r) * s
+        vec_x = math.sin(r)
+        vec_y = math.cos(r)
         
-        if self.is_valid_move((target_x, target_y)):
-            self.x = target_x
-            self.y = target_y
+        #print vec_x, vec_y
+        vector = Vec2d(vec_x, vec_y) * self.accel_dir * self.power * 10.0
+        self.pm_body.apply_impulse(vector)
+        
+        #if self.is_valid_move((target_x, target_y)):
+        #    self.x = target_x
+        #    self.y = target_y
     
     def calculate_speed(self, dt, friction):
         """Calculates the car's new speed based on its current speed, the
@@ -267,65 +290,72 @@ class Car(CocosNode):
         self.disable_controls()
         self.accel_dir = -1
         self.stopping = True
-    
-    mass    = property(lambda self: self.body_properties['mass'])
-    power   = property(lambda self: self.engine_properties['power'])
-    grip    = property(lambda self: self.tyres_properties['grip'])
+
+    # propertie helpe functions, properties are below
     
     def _add_engine(self, engine_name):
         self.engine_name = engine_name
+
     def _set_engine(self, engine_name):
         self._add_engine(engine_name)
         self.set_part_dependant_properties()
-    engine = property(lambda self: self.engine_name, _set_engine)
-    engine_properties = property(lambda self: parts.engine[self.engine_name])
     
     def _add_body(self, body_name):
         self.body_name = body_name
         image_file = parts.body[self.body_name]['image']
         self.add(Sprite(image_file), name='body', z=10)
+
     def _set_body(self, body_name):
         self.try_remove('body')
         self._add_body(body_name)
         self.set_part_dependant_properties()
         self.align_tyres()
-    body = property(lambda self: self.body_name, _set_body)
-    body_properties = property(lambda self: parts.body[self.body_name],
-        doc='Returns the properties of the tyres, as defined in the parts config.')
     
     def _add_tyres(self, tyres_name):
         self.tyres_name = tyres_name
         image = parts.tyres[self.tyres_name]['image']
         for tyre_name in TYRE_NAMES:
             self.add(Sprite(image), name=tyre_name, z=9)
+
     def _set_tyres(self, tyres_name):
         for tyre_name in TYRE_NAMES:
             self.try_remove(tyre_name)
         self._add_tyres(tyres_name)
         self.set_part_dependant_properties()
         self.align_tyres()
-    tyres = property(lambda self: self.tyres_name, _set_tyres)
-    tyres_properties = property(lambda self: parts.tyres[self.tyres_name],
-        doc='Returns the properties of the tyres, as defined in the parts config.')
-    front_tyres = property(lambda self: (self.get('tyre_fl'), self.get('tyre_fr')),
-        doc='Returns the top two tyre Sprites.')
-    back_tyres = property(lambda self: (self.get('tyre_bl'), self.get('tyre_br')),
-        doc='Returns the bottom two tyre Sprites.')
     
     def _get_part_properties(self):
         result = {}
         for group in parts.options:
             result[group] = getattr(self, group + '_properties')
         return result
-    part_properties = property(_get_part_properties)
     
     def _get_cost(self):
         cost = 0
         for properties in self.part_properties.values():
             cost += properties['price']
         return cost
-    cost = property(_get_cost)
     
+    # properties
+    
+    mass                = property(lambda self: self.body_properties['mass'])
+    power               = property(lambda self: self.engine_properties['power'])
+    grip                = property(lambda self: self.tyres_properties['grip'])
+    engine              = property(lambda self: self.engine_name, _set_engine)
+    engine_properties   = property(lambda self: parts.engine[self.engine_name])
+    body                = property(lambda self: self.body_name, _set_body)
+    body_properties     = property(lambda self: parts.body[self.body_name],
+                    doc='Returns the properties of the tyres, as defined in the parts config.')
+    tyres               = property(lambda self: self.tyres_name, _set_tyres)
+    tyres_properties    = property(lambda self: parts.tyres[self.tyres_name],
+                    doc='Returns the properties of the tyres, as defined in the parts config.')
+    front_tyres         = property(lambda self: (self.get('tyre_fl'), self.get('tyre_fr')),
+                    doc='Returns the top two tyre Sprites.')
+    back_tyres          = property(lambda self: (self.get('tyre_bl'), self.get('tyre_br')),
+                    doc='Returns the bottom two tyre Sprites.')
+    part_properties     = property(_get_part_properties)
+    cost                = property(_get_cost)
+
     def align_tyres(self):
         """Aligns the tyres with the body."""
         for tyre_name in TYRE_NAMES:

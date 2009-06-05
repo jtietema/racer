@@ -86,13 +86,16 @@ class Race(Scene):
             
             car.resume_sounds()
             
+            # Add the track to the car
+            car.track = track
+            
+            # init physics
+            car.init_physics()
+            
             # Set the car's position.
             car.position = grid[i][0]
             car.rotation = grid[i][1]
             i += 1
-            
-            # Add the track to the car
-            car.track = track
             
             if isinstance(car, PlayerCar):
                 num_player_cars += 1
@@ -209,19 +212,19 @@ class Race(Scene):
                     self.scroller.set_focus(*car.position)
         
         # do collision detection
-        
+        self.track.space.step(dt)
         # make a copy of cars list to prevent duplicate collision checks
-        cars = self.cars[:]
-        # iterate over all cars
-        for car in self.cars:
-            # remove car from the te list to prevent detecting collision with self
-            cars.remove(car)
-            # iterate over remaining cars
-            for othercar in cars:
-                polygon = car.get_polygon()
-                other_polygon = othercar.get_polygon()
-                if polygon.intersects(other_polygon):
-                    self.resolve_collision(car, othercar)
+        #cars = self.cars[:]
+        ## iterate over all cars
+        #for car in self.cars:
+            ## remove car from the te list to prevent detecting collision with self
+            #cars.remove(car)
+            ## iterate over remaining cars
+            #for othercar in cars:
+                #polygon = car.get_polygon()
+                #other_polygon = othercar.get_polygon()
+                #if polygon.intersects(other_polygon):
+                    #self.resolve_collision(car, othercar)
                     
     def resolve_collision(self, car1, car2):
         diff_x = abs(car1.x - car2.x)

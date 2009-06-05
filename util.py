@@ -23,6 +23,8 @@ import pyglet
 
 from cocos.layer import ColorLayer
 
+from pymunk import Vec2d
+
 class Label(cocos.text.Label):
     '''Subclass to make cocos Label sane...'''
     def __init__(self, *args, **kwargs):
@@ -203,3 +205,62 @@ def color_from_hex(hex):
         raise RuntimeError('Invalid hex format')
     
     return tuple([int(x, 16) for x in match.groups()])
+
+def verts_img(image):
+    """Get verts from an image
+    
+    This function was taken from the cat_mower game: http://www.pyweek.org/e/sweepeur/
+    Copyright remains with the original author (Jaber)
+    """
+    width = image.width/2;
+    height = image.height/2
+    p1 = Vec2d(-width,-height); p2 = Vec2d(-width,height)
+    p3 = Vec2d(width,height);p4 = Vec2d(width,-height)
+    return [p1,p2,p3,p4]
+
+class PymunkNode(cocos.cocosnode.CocosNode):
+    """A CocosNode that wraps a Pymunk Body"""
+    def __init__(self, *args, **kwargs):
+        self.pm_body = None
+        self.pm_shape = None
+        cocos.cocosnode.CocosNode.__init__(self, *args, **kwargs)
+    
+    # propertie helpers
+    
+    def _get_position(self):
+        if self.pm_body is None: return
+        return self.pm_body.position
+    
+    def _set_position(self, pos):
+        if self.pm_body is None: return
+        self.pm_body.position = pos
+    
+    def _get_x(self):
+        if self.pm_body is None: return
+        return self.pm_body.position[0]
+    
+    def _set_x(self, x):
+        if self.pm_body is None: return
+        self.pm_body.position[0] = x
+    
+    def _get_y(self):
+        if self.pm_body is None: return
+        return self.pm_body.position[1]
+    
+    def _set_y(self, y):
+        if self.pm_body is None: return
+        self.pm_body.position[1] = y
+    
+    def _get_rotation(self):
+        if self.pm_body is None: return
+        return math.degrees(self.pm_body.angle)
+    
+    def _set_rotation(self, rot):
+        if self.pm_body is None: return
+        self.pm_body.angle = math.radians(rot)
+    
+    # properties
+    position = property(_get_position, _set_position)
+    x = property(_get_x, _set_x)
+    y = property(_get_y, _set_y)
+    rotation = property(_get_rotation, _set_rotation)

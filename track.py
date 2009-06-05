@@ -24,6 +24,8 @@ import pyglet
 import pyglet.info
 from pyglet.image.codecs.png import PNGImageDecoder
 
+import pymunk
+
 
 CHECKPOINT_STAGE_TYPES = 3
 
@@ -40,6 +42,9 @@ class Track(cocos.layer.Layer):
         self.overlay_data = None
         self.size = None
         self.partition_list = None
+        
+        self.space = pymunk.Space()
+        self.space.damping = 0.5
         
         # load the tracks config file
         self.cp = cp = ConfigParser.ConfigParser()
