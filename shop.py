@@ -32,6 +32,10 @@ import parts
 from game_state import state
 
 
+HEADER_BG_COLOR = (150, 0, 0, 255)
+HEADER_FG_COLOR = (255,) * 4
+
+
 # TODO: show popup when leaving shop after changes have been made.
 
 
@@ -57,12 +61,12 @@ class Shop(Scene):
             self.add(sub_layer)
         
         # Header
-        header_bg = ColorLayer(150, 0, 0, 255, director.window.width, 100)
+        header_bg = ColorLayer(*(HEADER_BG_COLOR + (director.window.width, 100)))
         header_bg.position = (0, director.window.height - header_bg.height)
         self.add(header_bg, z=1)
         
         header = util.Label('Shop', font_name='Lizzie', font_size=60,
-            color=(255,) * 4, anchor_y='top', anchor_x='right')
+            color=HEADER_FG_COLOR, anchor_y='top', anchor_x='right')
         header.x = director.window.width - 20
         header.y = director.window.height - 5
         self.add(header, z=2)
@@ -456,8 +460,8 @@ class ButtonLayer(Layer):
         y = self.height - button_size[1] - 10
         
         common_properties = {
-            'bg_color': (150, 0, 0, 255),
-            'fg_color': (255,) * 4,
+            'bg_color': HEADER_BG_COLOR,
+            'fg_color': HEADER_FG_COLOR,
             'bold': True,
             'font_size': 20,
             'font_name': 'Lizzie'
