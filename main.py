@@ -26,11 +26,17 @@ from cups import Cup
 import profiles
 from game_state import state
 
-director.init(width=1024, height=768, caption='RCr: Larry\'s Lawn')
+director.init(width=1024, height=768, caption="""RCr: Larry's Lawn""")
 
-pyglet.resource.path.extend(['img', os.path.join('cups', 'garden')])
+pyglet.resource.path.extend([
+    'img',
+    os.path.join('cups', 'garden')
+])
 pyglet.resource.reindex()
 
+pyglet.font.add_directory('fonts')
+
+# TODO: non-fixed
 state.cup = Cup('garden')
 
 menu_scene = MenuScene()

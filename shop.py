@@ -55,6 +55,17 @@ class Shop(Scene):
         
         for sub_layer in self.sub_layers.values():
             self.add(sub_layer)
+        
+        # Header
+        header_bg = ColorLayer(150, 0, 0, 255, director.window.width, 100)
+        header_bg.position = (0, director.window.height - header_bg.height)
+        self.add(header_bg, z=1)
+        
+        header = util.Label('Shop', font_name='Lizzie', font_size=60,
+            color=(255,) * 4, anchor_y='top', anchor_x='right')
+        header.x = director.window.width - 20
+        header.y = director.window.height - 5
+        self.add(header, z=2)
     
     def reset(self):
         self.car = copy.copy(state.profile.car)
@@ -193,7 +204,7 @@ class PreviewFrame(Frame):
     def __init__(self, car):
         width, height = 400, 500
         x = 10
-        y = director.window.height - height - 10
+        y = director.window.height - height - 110
         
         super(PreviewFrame, self).__init__((width, height),
             content_bg_color=(50, 50, 50, 255))
@@ -254,7 +265,7 @@ class PartsFrame(SpinnerFrame):
         width = 598
         height = 500
         x = director.window.width - width - 10
-        y = director.window.height - height - 10
+        y = director.window.height - height - 110
         
         super(PartsFrame, self).__init__((width, height))
         
@@ -340,7 +351,7 @@ class BalanceLayer(Layer):
         
         self.position = (x, 10)
         self.width = 400
-        self.height = 230
+        self.height = 130
         
         self.car = car
         
@@ -436,27 +447,36 @@ class ButtonLayer(Layer):
         self.car = car
         
         self.width = 598
-        self.height = 230
+        self.height = 130
         self.x = director.window.width - self.width - 10
         self.y = 10
         
-        button_size = (100, 50)
-        bg_color = util.color_from_hex('#FF892E') + (255,)
+        button_size = (175, 50)
         
-        cancel_button = LabelButton('Cancel', button_size, bg_color=bg_color)
-        cancel_button.position = (self.width - cancel_button.width, 0)
+        y = self.height - button_size[1] - 10
+        
+        common_properties = {
+            'bg_color': (150, 0, 0, 255),
+            'fg_color': (255,) * 4,
+            'bold': True,
+            'font_size': 20,
+            'font_name': 'Lizzie'
+        }
+        
+        cancel_button = LabelButton('Cancel', button_size, **common_properties)
+        cancel_button.position = (self.width - cancel_button.width, y - button_size[1] - 10)
         cancel_button.on_click(self.on_cancel)
         self.add(cancel_button)
         
-        self.reset_button = LabelButton('Reset', button_size, bg_color=bg_color,
-            enabled=False)
-        self.reset_button.position = (cancel_button.x - self.reset_button.width - 20, 0)
+        self.reset_button = LabelButton('Reset', button_size, enabled=False,
+            **common_properties)
+        self.reset_button.position = (self.width - cancel_button.width, y)
         self.reset_button.on_click(self.on_reset)
         self.add(self.reset_button)
         
-        self.ok_button = LabelButton('Buy', button_size, bg_color=bg_color,
-            enabled=False)
-        self.ok_button.position = (self.reset_button.x - self.ok_button.width - 20, 0)
+        self.ok_button = LabelButton('Buy', button_size, enabled=False,
+            **common_properties)
+        self.ok_button.position = (self.reset_button.x - self.ok_button.width - 10, y)
         self.ok_button.on_click(self.on_ok)
         self.add(self.ok_button)
     
@@ -632,6 +652,9 @@ class LabelButton(Button):
         self.bg_layer = ColorLayer(*(bg_color + (width, height)))
         self.add(self.bg_layer, z=0)
 
+        if not enabled:
+            fg_color = fg_color[:3] + (self.disabled_opacity,)
+            
         self.label = util.Label(caption, color=fg_color, anchor_x='center',
            anchor_y='center', x=self.width / 2, y=self.height / 2, **kwargs)
         self.add(self.label, z=1)
@@ -645,8 +668,10 @@ class LabelButton(Button):
         if hasattr(self, 'bg_layer'):
             if enabled:
                 self.bg_layer.opacity = self.enabled_opacity
+                self.label.opacity = self.enabled_opacity
             else:
                 self.bg_layer.opacity = self.disabled_opacity
+                self.label.opacity = self.disabled_opacity
     enabled = property(lambda self: self._enabled, _set_enabled,
         doc="""Disables any on_click callbacks and decreases the button's
             background opacity to visualize it being enabled. Note that it is
