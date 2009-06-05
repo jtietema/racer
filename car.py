@@ -119,7 +119,9 @@ class Car(PymunkNode):
         Make sure you added the track before calling this function!!!
         """
         body = self.get('body')
+        body.scale = 0.3
         verts = util.verts_img(body)
+        body.scale = 1.0
         inertia = pymunk.moment_for_poly(self.mass, verts)
         self.pm_body = pymunk.Body(self.mass, inertia)
         self.pm_shape = pymunk.Poly(self.pm_body, verts)
@@ -192,14 +194,12 @@ class Car(PymunkNode):
     def update(self, dt):
         """Update the car's state."""
         friction = self.track.get_friction_at(self.position)
-        #self.pm_body.friction = 1000 + friction  * 500.0
-        #print self.pm_body.friction
-        #self.speed = self.calculate_speed(dt, friction)
+        self.speed = self.pm_body.velocity.get_length()
         
-        rot_factor = min(1, abs(self.speed) / 200)
+        rot_factor = min(1, abs(self.speed) / 275)
         #self.rotation = (self.rotation + (rot_factor * ROTATION_SPEED * self.rot_dir * signum(self.speed) * dt)) % 360
-        self.rotation = (self.rotation + (ROTATION_SPEED * self.rot_dir * dt)) % 360
-
+        self.rotation = (self.rotation + (rot_factor * ROTATION_SPEED * self.rot_dir * signum(self.speed) * dt)) % 360
+        
         tyre_rotation = MAX_TYRE_ROTATION * self.rot_dir
         for tyre in self.front_tyres:
             tyre.rotation = tyre_rotation
@@ -211,14 +211,28 @@ class Car(PymunkNode):
         self.engine_sound.pitch = 0.7 + min(abs(self.speed) / 1000 * 0.7, 0.7)
         self.engine_sound.volume = 0.1 + min(abs(self.speed) / 1000 * 0.2, 0.2)
         
+        # calculate the vector in which we are traveling
         r = math.radians(self.rotation)
         
         vec_x = math.sin(r)
         vec_y = math.cos(r)
         
-        #print vec_x, vec_y
-        vector = Vec2d(vec_x, vec_y) * self.accel_dir * self.power * 10.0
-        self.pm_body.apply_impulse(vector)
+        #print friction
+        vector = Vec2d(vec_x, vec_y) * self.accel_dir * self.power * 20.0
+        
+        # compensate for over drifting by setting the torque torque 
+        velocity_degrees = self.pm_body.velocity.get_angle()
+        rotation_degrees = self.get_pymunk_angle()
+        # TODO: this calculation results in errors around the 180/-180 degrees barrier :-S
+        angle_diff = (rotation_degrees - velocity_degrees) / 2
+        # make sure we don't overcompensate in sharp turns
+        if angle_diff > 0:
+            angle_diff = min(angle_diff, 30.0)
+        else:
+            angle_diff = max(angle_diff, -30.0)
+        compensated_vector = vector.rotated(angle_diff)
+        # apply the vector
+        self.pm_body.apply_impulse(compensated_vector)
         
         #if self.is_valid_move((target_x, target_y)):
         #    self.x = target_x

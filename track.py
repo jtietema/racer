@@ -44,7 +44,7 @@ class Track(cocos.layer.Layer):
         self.partition_list = None
         
         self.space = pymunk.Space()
-        self.space.damping = 0.5
+        self.space.damping = 0.3
         
         # load the tracks config file
         self.cp = cp = ConfigParser.ConfigParser()

@@ -264,3 +264,12 @@ class PymunkNode(cocos.cocosnode.CocosNode):
     x = property(_get_x, _set_x)
     y = property(_get_y, _set_y)
     rotation = property(_get_rotation, _set_rotation)
+    
+    def get_pymunk_angle(self):
+        rotation_degrees = (self.rotation + 90) % 360
+        if rotation_degrees > 180:
+            rotation_degrees = -1 * (rotation_degrees - 180)
+        else:
+            rotation_degrees = 180 - rotation_degrees
+        return rotation_degrees
+            
