@@ -24,6 +24,7 @@ from cocos.director import director
 from cocos.menu import *
 from cocos.scene import Scene
 from cocos.layer import MultiplexLayer
+from cocos.scenes.transitions import *
 
 from shop import Shop
 from race import Race
@@ -116,7 +117,7 @@ class MainMenu(Menu):
         director.push(LoadTrack(state.cup.next_track()))
     
     def on_shop(self):
-        director.push(Shop())
+        director.push(FadeTransition(Shop(), 1))
     
     def on_quit(self):
         """Called when the user presses escape."""

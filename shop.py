@@ -25,6 +25,7 @@ from cocos.director import director
 from cocos.layer import Layer, ColorLayer, MultiplexLayer
 from cocos.scene import Scene
 from cocos.sprite import Sprite
+from cocos.scenes.transitions import *
 import pyglet
 
 import util
@@ -97,6 +98,7 @@ class Shop(Scene):
         
     def cancel(self):
         director.pop()
+        director.push(FadeTransition(director.next_scene, 1))
 
 
 class Frame(Layer):
@@ -386,9 +388,10 @@ class BalanceLayer(Layer):
         
         # Separator line
         y -= 15
-        line = cocos.draw.Line((x, y), (self.width - 10, y),
-            (255, 255, 255, 255))
-        self.add(line)
+        # DISABLED BECAUSE OF PROBLEMS WHEN USING SCENE TRANSITIONS
+        # line = cocos.draw.Line((x, y), (self.width - 10, y),
+        #     (255, 255, 255, 255))
+        # self.add(line)
         
         # Balance after purchase
         y -= 25
