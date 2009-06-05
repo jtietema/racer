@@ -48,8 +48,9 @@ class Shop(Scene):
         
         self.balance_layer = BalanceLayer(self.car)
         self.button_layer = ButtonLayer()
+        self.preview_layer = PreviewFrame(self.car)
         
-        self.add(PreviewFrame(self.car))
+        self.add(self.preview_layer)
         self.add(PartsFrame(self.car))
         self.add(self.balance_layer)
         self.add(self.button_layer)
@@ -61,6 +62,7 @@ class Shop(Scene):
         # data from balance layer.
         self.balance_layer.update()
         self.button_layer.update()
+        self.preview_layer.update()
     
     def commit(self):
         """Commits the changes of the modified car to the profile."""
@@ -216,6 +218,12 @@ class PreviewFrame(Frame):
             self.content_layer.add(bar, name=bar_type)
             
             bar_y -= 25
+        
+        self.update()
+        
+    def update(self):
+        for bar_type in ('grip',):
+            self.content_layer.get(bar_type).fill_bar(getattr(self.car, bar_type))
 
 
 class PartsFrame(SpinnerFrame):
@@ -241,7 +249,7 @@ class PartsFrame(SpinnerFrame):
         # Keep track of the highlighted button per group.
         self.highlighted_buttons = {}
         
-        # Body layer        
+        # Body layer
         group_titles.append('Body')
         layers.append(self.create_parts_layer('body'))
         
@@ -400,7 +408,7 @@ class ButtonLayer(Layer):
         cancel_button.on_click(self.cancel)
         self.add(cancel_button)
         
-        self.ok_button = LabelButton('OK', button_size, bg_color=bg_color)
+        self.ok_button = LabelButton('Buy', button_size, bg_color=bg_color)
         self.ok_button.position = (cancel_button.x - self.ok_button.width - 20, 0)
         self.ok_button.on_click(self.ok)
         self.add(self.ok_button)
@@ -644,26 +652,34 @@ class Bar(Layer):
     """Represents a filled bar, that can be used for progress bars."""
 
     def __init__(self, size, fill=0, bg_color=(100, 100, 100, 255),
-       fill_color=(0, 255, 0, 255), padding=1):
+        fill_color=(0, 255, 0, 255), padding=2):
 
-       super(Bar, self).__init__()
+        super(Bar, self).__init__()
+        
+        self.padding = padding
+        self.fill_color = fill_color
+        
+        assert self.padding * 2 < size[1]
 
-       self.bg_layer = ColorLayer(*(bg_color + size))
-       self.add(self.bg_layer, z=-2)
+        self.bg_layer = ColorLayer(*(bg_color + size))
+        self.add(self.bg_layer, z=-2)
 
-       # Determine the maximum amount of pixels the bar can be filled by.
-       self.max_fill_width = self.bg_layer.width - padding * 4
+        # Determine the maximum amount of pixels the bar can be filled by.
+        self.max_fill_width = self.bg_layer.width - padding * 2
 
-       fill_size = (1, self.bg_layer.height - padding * 4)
-       self.fill_layer = ColorLayer(*(fill_color + fill_size))
-       self.fill_layer.position = (padding, padding)
-       self.add(self.fill_layer, z=-1)
-
-       # Set the initial fill.
-       self.fill_bar(fill)
+        # Set the initial fill.
+        self.fill_bar(fill)
 
     def fill_bar(self, p):
-       """Fills up the bar up to a certain percentage. Caps the results
-          between sensible values."""
-       bar_width = int(self.max_fill_width * min(p, 1))
-       self.fill_layer.width = max(1, bar_width)
+        """Fills up the bar up to a certain percentage. Caps the results
+           between sensible values."""
+        try:
+            self.remove('fill')
+        except Exception:
+            pass
+        
+        fill_width = max(1, int(self.max_fill_width * min(p, 1)))
+        fill_size = (fill_width, self.bg_layer.height - self.padding * 2)
+        self.fill_layer = ColorLayer(*(self.fill_color + fill_size))
+        self.fill_layer.position = (self.padding,) * 2
+        self.add(self.fill_layer, z=-1, name='fill')
