@@ -406,7 +406,7 @@ class TrafficLights(CocosNode):
         
         for i in range(-2, TrafficLights.NUM_LIGHTS / 2):
             overlay = ColorLayer(0, 0, 0, 125, width, height)
-            overlay.x = (i * width) / 2
+            overlay.x = i * width
             self.add(overlay, z=2)
             self.overlays.append(overlay)
     
